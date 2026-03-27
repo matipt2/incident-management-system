@@ -1,3 +1,50 @@
-# incident-management-system
+# ITL — System zarządzania incydentami (mini-ITIL)
 
-This project aims to design and implement a minimal incident management platform for an IT support organization.
+## Wymagania
+
+- Java 21+
+- Gradle (wrapper dołączony — nie trzeba instalować)
+
+## Struktura projektu
+
+```
+proj_zesp/
+├── backend/                        # Java 21, Spring Boot 4
+│   └── src/main/java/.../itl/
+│       ├── api/                    # Kontrolery REST + DTOs
+│       │   ├── IncidentController
+│       │   ├── SlaController
+│       │   ├── PostMortemController
+│       │   └── dto/
+│       ├── application/            # Serwisy (logika aplikacji)
+│       │   ├── IncidentService
+│       │   ├── ClassificationService
+│       │   ├── SlaService
+│       │   └── PostMortemService
+│       ├── domain/                 # Model domenowy
+│       │   ├── incident/
+│       │   ├── sla/
+│       │   └── postmortem/
+│       └── infrastructure/
+│           ├── config/
+│           ├── llm/
+│           └── persistence/
+├── frontend/                       
+├── .github/workflows/              
+└── PROJEKT.md                      # Opis wymagań
+```
+
+## Uruchomienie backendu
+
+```bash
+./gradlew :backend:bootRun
+```
+
+- API: `http://localhost:8080`
+- Swagger UI: `http://localhost:8080/swagger-ui/index.html`
+
+## Testy
+
+```bash
+./gradlew :backend:test
+```
