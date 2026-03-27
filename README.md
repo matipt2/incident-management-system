@@ -8,7 +8,7 @@
 ## Struktura projektu
 
 ```
-proj_zesp/
+incident-management-system/
 ├── backend/                        # Java 21, Spring Boot 4
 │   └── src/main/java/.../itl/
 │       ├── api/                    # Kontrolery REST + DTOs
