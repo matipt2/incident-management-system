@@ -3,7 +3,7 @@
 ## Wymagania
 
 - Java 21+
-- Gradle (wrapper dołączony — nie trzeba instalować)
+- Gradle
 
 ## Struktura projektu
 
