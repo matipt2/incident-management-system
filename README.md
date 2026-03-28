@@ -29,6 +29,10 @@ incident-management-system/
 │           ├── config/
 │           ├── llm/
 │           └── persistence/
+├── database/                       # PostgreSQL (Docker Compose + init SQL)
+│   ├── docker-compose.yml
+│   ├── .env.example
+│   └── init/01-init.sql
 ├── frontend/                       
 ├── .github/workflows/              
 └── PROJEKT.md                      # Opis wymagań
