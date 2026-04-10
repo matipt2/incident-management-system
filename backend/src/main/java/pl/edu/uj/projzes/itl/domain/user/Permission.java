@@ -1,0 +1,15 @@
+package pl.edu.uj.projzes.itl.domain.user;
+
+public enum Permission {
+    INCIDENT_REPORT,
+    INCIDENT_READ,
+    INCIDENT_ASSIGN,
+    INCIDENT_CLASSIFY,
+    INCIDENT_ESCALATE,
+    INCIDENT_RESOLVE,
+    INCIDENT_CLOSE,
+    SLA_READ,
+    POSTMORTEM_READ,
+    POSTMORTEM_WRITE,
+    POSTMORTEM_APPROVE
+}
