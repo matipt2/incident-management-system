@@ -3,6 +3,7 @@ package pl.edu.uj.projzes.itl
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.transaction.annotation.Transactional
+import pl.edu.uj.projzes.itl.application.IncidentNotFoundException
 import pl.edu.uj.projzes.itl.application.IncidentService
 import pl.edu.uj.projzes.itl.domain.incident.IncidentCategory
 import pl.edu.uj.projzes.itl.domain.incident.IncidentPriority
@@ -39,12 +40,22 @@ class IncidentServiceSpec extends Specification {
         incident.projectId == "PROJ-2"
     }
 
-    def "każde zgłoszenie tworzy zdarzenie INCIDENT_OPENED w historii"() {
+    def "każde zgłoszenie tworzy zdarzenie INCIDENT_REPORTED w historii"() {
         when:
         def incident = incidentService.reportIncident("VPN nie działa", "Brak dostępu", "piotr.w", "FORM", "PROJ-1")
 
         then:
-        incident.events.any { it.eventType == "INCIDENT_OPENED" }
+        incident.events.size() == 1
+        incident.events[0].eventType == "INCIDENT_REPORTED"
+        incident.events[0].performedBy == "piotr.w"
+    }
+
+    def "getById rzuca IncidentNotFoundException gdy incydent nie istnieje"() {
+        when:
+        incidentService.getById("nieistniejace-id")
+
+        then:
+        thrown(IncidentNotFoundException)
     }
 
     // US2: Przypisanie do agenta
@@ -136,6 +147,19 @@ class IncidentServiceSpec extends Specification {
         def results = incidentService.getByStatus(IncidentStatus.NEW)
 
         then:
+        !results.isEmpty()
         results.every { it.status == IncidentStatus.NEW }
+    }
+
+    def "getAll zwraca wszystkie incydenty"() {
+        given:
+        incidentService.reportIncident("Inc A", "Opis", "user", "API", "PROJ-1")
+        incidentService.reportIncident("Inc B", "Opis", "user", "API", "PROJ-2")
+
+        when:
+        def results = incidentService.getAll()
+
+        then:
+        results.size() >= 2
     }
 }

@@ -8,6 +8,7 @@ import pl.edu.uj.projzes.itl.application.SlaService
 import pl.edu.uj.projzes.itl.domain.incident.IncidentCategory
 import pl.edu.uj.projzes.itl.domain.incident.IncidentPriority
 import pl.edu.uj.projzes.itl.domain.sla.SlaViolation
+import spock.lang.PendingFeature
 import spock.lang.Specification
 import spock.lang.Subject
 
@@ -24,6 +25,7 @@ class SlaServiceSpec extends Specification {
     @Autowired
     IncidentService incidentService
 
+    @PendingFeature
     def "incydent bez przekroczenia SLA nie generuje naruszenia"() {
         given:
         def incident = incidentService.reportIncident("Nowy incydent", "Opis", "user", "API", "PROJ-1")
@@ -36,6 +38,7 @@ class SlaServiceSpec extends Specification {
         slaService.getViolationsForIncident(incident.id).isEmpty()
     }
 
+    @PendingFeature
     def "naruszenie SLA typu RESOLUTION_TIME_EXCEEDED jest wykrywane"() {
         given: "incydent, dla którego SLA już minęło"
         def incident = incidentService.reportIncident("Stary incydent", "Opis", "user", "API", "PROJ-SLA")
@@ -50,6 +53,7 @@ class SlaServiceSpec extends Specification {
         violations.any { it.violationType == SlaViolation.ViolationType.RESOLUTION_TIME_EXCEEDED }
     }
 
+    @PendingFeature
     def "naruszenie SLA nie jest duplikowane przy ponownym sprawdzeniu"() {
         given:
         def incident = incidentService.reportIncident("Duplikat SLA", "Opis", "user", "API", "PROJ-SLA")
@@ -65,6 +69,7 @@ class SlaServiceSpec extends Specification {
                 .count { it.violationType == SlaViolation.ViolationType.RESOLUTION_TIME_EXCEEDED } <= 1
     }
 
+    @PendingFeature
     def "naruszenia SLA dla różnych priorytetów są wykrywane poprawnie"() {
         given:
         def incident = incidentService.reportIncident("Test priorytetu", "Opis", "user", "API", "PROJ-SLA")

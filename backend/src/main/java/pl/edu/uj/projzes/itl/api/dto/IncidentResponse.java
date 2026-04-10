@@ -1,5 +1,6 @@
 package pl.edu.uj.projzes.itl.api.dto;
 
+import pl.edu.uj.projzes.itl.domain.incident.Incident;
 import pl.edu.uj.projzes.itl.domain.incident.IncidentCategory;
 import pl.edu.uj.projzes.itl.domain.incident.IncidentPriority;
 import pl.edu.uj.projzes.itl.domain.incident.IncidentStatus;
@@ -30,5 +31,25 @@ public record IncidentResponse(
             Instant occurredAt
     ) {}
 
-    // TODO: metoda mapująca Incident -> IncidentResponse
+    public static IncidentResponse from(Incident incident) {
+        List<EventDto> events = incident.getEvents().stream()
+                .map(e -> new EventDto(e.getEventType(), e.getDetails(), e.getPerformedBy(), e.getOccurredAt()))
+                .toList();
+        return new IncidentResponse(
+                incident.getId(),
+                incident.getTitle(),
+                incident.getDescription(),
+                incident.getReportedBy(),
+                incident.getChannel(),
+                incident.getProjectId(),
+                incident.getStatus(),
+                incident.getPriority(),
+                incident.getCategory(),
+                incident.getAssignedTo(),
+                incident.getCreatedAt(),
+                incident.getUpdatedAt(),
+                incident.getResolvedAt(),
+                events
+        );
+    }
 }

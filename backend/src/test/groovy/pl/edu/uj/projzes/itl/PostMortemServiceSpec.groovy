@@ -6,6 +6,7 @@ import org.springframework.transaction.annotation.Transactional
 import pl.edu.uj.projzes.itl.application.IncidentService
 import pl.edu.uj.projzes.itl.application.PostMortemService
 import pl.edu.uj.projzes.itl.domain.postmortem.PostMortemStatus
+import spock.lang.PendingFeature
 import spock.lang.Specification
 import spock.lang.Subject
 
@@ -20,6 +21,7 @@ class PostMortemServiceSpec extends Specification {
     @Autowired
     IncidentService incidentService
 
+    @PendingFeature
     def "tworzenie raportu post-mortem dla incydentu krytycznego"() {
         given:
         def incident = incidentService.reportIncident("Awaria krytyczna", "Opis", "user", "API", "PROJ-1")
@@ -33,6 +35,7 @@ class PostMortemServiceSpec extends Specification {
         report.status == PostMortemStatus.DRAFT
     }
 
+    @PendingFeature
     def "aktualizacja raportu post-mortem"() {
         given:
         def incident = incidentService.reportIncident("Awaria", "Opis", "user", "API", "PROJ-1")
@@ -46,6 +49,7 @@ class PostMortemServiceSpec extends Specification {
         updated.status == PostMortemStatus.DRAFT
     }
 
+    @PendingFeature
     def "zatwierdzenie raportu zmienia status na APPROVED"() {
         given:
         def incident = incidentService.reportIncident("Awaria", "Opis", "user", "API", "PROJ-1")

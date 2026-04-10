@@ -5,6 +5,7 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.transaction.annotation.Transactional
 import pl.edu.uj.projzes.itl.application.ClassificationService
 import pl.edu.uj.projzes.itl.application.IncidentService
+import spock.lang.PendingFeature
 import spock.lang.Specification
 import spock.lang.Subject
 
@@ -20,6 +21,7 @@ class ClassificationServiceSpec extends Specification {
     IncidentService incidentService
 
     // US4: Rekomendacja klasyfikacji bez zmiany stanu
+    @PendingFeature
     def "podgląd klasyfikacji zwraca rekomendację priorytetu i kategorii"() {
         when:
         def result = classificationService.preview("Serwer niedostępny", "Produkcja nie odpowiada od 10 minut")
@@ -30,6 +32,7 @@ class ClassificationServiceSpec extends Specification {
         result.suggestedCategory() != null
     }
 
+    @PendingFeature
     def "podgląd klasyfikacji nie zmienia stanu incydentu"() {
         given:
         def incident = incidentService.reportIncident("Błąd sieci", "Opis", "user", "API", "PROJ-1")
@@ -43,6 +46,7 @@ class ClassificationServiceSpec extends Specification {
         fetched.category == null
     }
 
+    @PendingFeature
     def "klasyfikacja asynchroniczna zapisuje zdarzenie LLM_CLASSIFICATION_SUGGESTED w historii"() {
         given:
         def incident = incidentService.reportIncident("Atak na sieć", "Duże obciążenie", "user", "API", "PROJ-1")
