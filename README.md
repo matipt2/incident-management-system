@@ -52,3 +52,18 @@ incident-management-system/
 ```bash
 ./gradlew :backend:test
 ```
+## Frontend 
+### http://localhost:5173
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+## Testy frontendu
+
+```bash
+cd frontend
+npm run test:unit
+```
+
