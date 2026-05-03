@@ -6,6 +6,5 @@ public record PostMortemRequest(
         @NotBlank String rootCause,
         @NotBlank String timeline,
         @NotBlank String impact,
-        @NotBlank String actionItems,
-        @NotBlank String author
+        @NotBlank String actionItems
 ) {}

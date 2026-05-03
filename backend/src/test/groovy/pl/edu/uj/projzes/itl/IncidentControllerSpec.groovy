@@ -2,6 +2,7 @@ package pl.edu.uj.projzes.itl
 
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.security.test.context.support.WithMockUser
 import org.springframework.transaction.annotation.Transactional
 import pl.edu.uj.projzes.itl.api.IncidentController
 import pl.edu.uj.projzes.itl.application.IncidentService
@@ -10,6 +11,7 @@ import spock.lang.Specification
 
 @SpringBootTest
 @Transactional
+@WithMockUser(authorities = ["INCIDENT_READ", "INCIDENT_REPORT"])
 class IncidentControllerSpec extends Specification {
 
     @Autowired
