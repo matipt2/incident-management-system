@@ -1,0 +1,93 @@
+AUTENTYKACJA - INTEGRACJA FE Z BE
+==================================
+
+
+1. REJESTRACJA
+--------------
+
+POST /api/auth/register
+Content-Type: application/json
+
+{
+  "username": "jan.kowalski",
+  "email": "jan@example.com",
+  "password": "min8znaków",
+  "role": "REPORTER"
+}
+
+"role" jest opcjonalne - domyslnie REPORTER.
+Dostepne wartosci: REPORTER, AGENT, MANAGER.
+
+
+2. LOGOWANIE
+------------
+
+POST /api/auth/login
+Content-Type: application/json
+
+{
+  "username": "jan.kowalski",
+  "password": "min8znaków"
+}
+
+Odpowiedz (200):
+
+{
+  "token": "eyJhbGciOi...",
+  "userId": "uuid",
+  "username": "jan.kowalski",
+  "role": "REPORTER",
+  "permissions": ["INCIDENT_REPORT", "INCIDENT_READ"]
+}
+
+
+3. UZYCIE TOKENU
+----------------
+
+Kazde kolejne zadanie do chronionych endpointow wymaga naglowka:
+
+  Authorization: Bearer eyJhbGciOi...
+
+Token jest wazny 24 godziny.
+Po wygasnieciu nalezy ponownie wywolac POST /api/auth/login.
+
+
+4. KODY BLEDOW
+--------------
+
+401 - Brak tokenu lub token wygasl / nieprawidlowy
+403 - Token wazny, ale rola nie ma wymaganego uprawnienia
+409 - Rejestracja: nazwa uzytkownika lub e-mail juz zajete
+
+
+5. DANE ZALOGOWANEGO UZYTKOWNIKA
+--------------------------------
+
+GET /api/me/resources
+Authorization: Bearer eyJhbGciOi...
+
+Odpowiedz (200):
+
+{
+  "userId": "uuid",
+  "username": "jan.kowalski",
+  "role": "AGENT",
+  "permissions": ["INCIDENT_REPORT", "INCIDENT_READ", "INCIDENT_ASSIGN", ...]
+}
+
+Mozna wywolac raz po zalogowaniu zamiast dekodowac token po stronie klienta.
+Przydatne do inicjalizacji stanu aplikacji (np. Redux store, Context).
+Zwraca 401 jesli token jest nieprawidlowy lub wygasl.
+
+
+6. UPRAWNIENIA ROL
+------------------
+
+REPORTER  - zglaszanie i odczyt incydentow
+AGENT     - jak REPORTER + przypisanie, klasyfikacja, rozwiazanie,
+            zamkniecie, odczyt SLA i post-mortem
+MANAGER   - wszystkie uprawnienia
+
+Pole "permissions" w odpowiedzi logowania zawiera dokladna liste uprawnien.
+FE moze jej uzywac do warunkowego renderowania UI (np. ukrywanie przycisku
+"Przypisz" dla roli REPORTER).

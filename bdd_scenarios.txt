@@ -1,0 +1,183 @@
+1. Feature: Zgłaszanie incydentów
+=================================
+
+Scenario: System akceptuje zgłoszenie przez API
+Given System jest uruchomiony and i sprawny
+And Jestem zalogowany jako Użytkownik wsparcia
+When Tworzę nowe poprawne zgłoszenie incydentu z załączonymi metadanymi
+And Przesyłam zgłoszenie do systemu przez APi
+Then System przyjmuje zgłoszenie incydentu przekazując unikalny indentyfikator zgłoszenia
+And Nowo utworzone zgłoszenie widoczne jest w systemie
+And System zapisuje informacje o udanym zgłoszeniu w bazie danych: Czas, Użytkownika zgłaszającego, kanał zgloszenia
+
+
+Scenario: System odrzuca niepełne zgłoszenia przez API
+Given System jest uruchomiony and i sprawny
+And Jestem zalogowany jako użytkownik wsparcia
+When Tworzę nowe zgłoszenie incydentu z niepełnymi danymi i załączonymi metadanymi
+And Przesyłam zgłoszenie do systemu przez API
+Then System odrzuca zgłoszenie incydentu
+And W systemie nie jest widoczny nowy incydent z przekazanymi danymi
+And System zapisuje informacje o nieduanym zgłoszeniu w bazie danych: Powód drzucenia, Czas, Użytkownika zgłaszającego, kanał zgloszenia
+
+
+Scenario: System odrzuca zgłoszenia użytkownika z niewystarczajacymi uprawnieniami przez API
+Given System jest uruchomiony i sprawny
+And Jestem zalogowany jako Obserwator
+When Tworzę nowe zgłoszenie incydentu z niepełnymi danymi i załączonymi metadanymi
+And Przesyłam zgłoszenie do systemu przez API
+Then System odrzuca zgłoszenie incydentu, informując użytkownika o niewystarczających uprawnienaich
+And W systemie nie jest widoczny nowy incydent z przekazanymi danymi
+And System zapisuje informacje o nieduanym w bazie danych: Powód odrzucenia, Czas, Użytkownika zgłaszającegho, kanał zgłoszenia
+
+
+Scenario: System nie wyświetla formularza zgłaszania incydentu użytkownikom bez uprawnień
+Given System jest uruchomiony i sprawny
+And Jestem zalogowany jako Obserwator
+Then Na panelu głównym systemu nie widzę widżetu zgłaszania incydentów bezpieczeństwa
+
+
+Scenario: System akceptuje zgłoszenie przez formularz
+Given System jest uruchomiony i sprawny
+And Jestem zalogowany jako Wżytkownik wsparcia
+Then Na panelu głównym systemu widzę formularz zgłaszania zdarzenia
+When Po wypełnienie formularza i kliknięciu wyśli system prezentuje informacje o udanym przesłaniu zgłoszenia
+Then Nowo utworzone zgłoszenie widoczne jest w systemie
+And System zapisuje informacje o udanym zgłoszeniu w bazie danych: Czas, Użytkownika zgłaszającego, kanał zgloszenia
+
+
+Scenario: System nie pozwala na przesłanie niepełnych danych przez formularz
+Given System jest uruchomiony i sprawny
+And Jestem zalogowany jako Wżytkownik wsparcia
+When Na panelu głównym systemu widzę formularz zgłaszania zdarzenia
+And Wypełniam częściowo dane formularza
+Then nie mogę kliknąć przycisku do przesłania formularza
+Mateusz
+Scenario 1
+
+given: kierownik wsparcia otwiera szczegoly incydentu
+when: wybiera widok historii zdarzen
+then: system wybiera wszystkie zdarzenia zwiazane z incydentem
+
+Scenario 2
+
+given: kierownik wchodzi w historie incydentu
+when: kierownik wprowadzi szczegoly takie jak data, rodzaj incydentu
+then: wyswietli sie historia incydentu przefiltrowana przez wpisane szczegoly, $
+
+Scenario 3
+
+given incydent przeszedł przez kilka etapów obsługi
+when kierownik przegląda historię incydentu
+then system pokazuje wszystkie zmiany stanu incydentu
+
+
+2. Lista incydentów
+====================
+
+Sprawdzanie listy incydentów
+
+Given: Zgłoszone incydenty, zalogowany użytkownik z rolą agenta
+When: Agent wciska przycisk z listą incydentów
+Then: Otwiera się nowe okno/nowy widok z listą incydentów
+
+Sortowanie
+
+Given: Widok listy incydentów, zalogowany użytkownik z rolą agenta
+When: Użytkownik wciska przyciski do sortowania w nagłówku listy
+Then: Lista jest posortowana według danej kolumny
+
+Przeszukiwanie
+
+Given: Widok listy incydentów, zalogowany użytkownik z rolą agenta
+When: Użytkownik zaczyna wpisywać tekst w polu wyszukiwarki
+Then: Lista incydentów automatycznie jest zawężana
+
+Filtrowanie
+Given: Widok listy incydentów, zalogowany użytkownik z rolą agenta
+When: Użytkownik w nagłówku tabeli zaznaczana stan, priorytet lub kategorię
+Then: Lista incydentów zostaje odfiltrowana
+
+3. Historia incydentów dla kierownika
+=====================================
+
+Scenario 1
+
+given: kierownik wsparcia otwiera szczegoly incydentu
+when: wybiera widok historii zdarzen
+then: system wybiera wszystkie zdarzenia zwiazane z incydentem
+
+Scenario 2
+
+given: kierownik wchodzi w historie incydentu
+when: kierownik wprowadzi szczegoly takie jak data, rodzaj incydentu
+then: wyswietli sie historia incydentu przefiltrowana przez wpisane szczegoly, $
+
+Scenario 3
+
+given incydent przeszedł przez kilka etapów obsługi
+when kierownik przegląda historię incydentu
+then system pokazuje wszystkie zmiany stanu incydentu
+
+4. Rekomendacje LLM
+====================
+
+Feature: Rekomendacja kategorii i priorytetu incydentu przez LLM
+  Aby szybciej podjąć decyzję o obsłudze zgłoszenia
+  Jako agent wsparcia
+  Chcę otrzymać rekomendowaną kategorię i priorytet incydentu
+
+  Background:
+    Given istnieje incydent "INC-2026-0001" w stanie "Nowy"
+    And incydent ma opis "Aplikacja płatności zwraca błąd 500 dla wielu użytkowników"
+    And historia incydentu jest pusta
+
+  Scenario: System zwraca rekomendację klasyfikacji z LLM
+    When agent wsparcia żąda rekomendacji klasyfikacji dla incydentu "INC-2026-0001"
+    Then system wywołuje usługę LLM do wstępnej klasyfikacji
+    And system zwraca rekomendację kategorii "Aplikacja"
+    And system zwraca rekomendację priorytetu "Wysoki"
+
+  Scenario: Rekomendacja z LLM jest zapisana jako zdarzenie historii incydentu
+    Given usługa LLM zwróciła kategorię "Sieć" oraz priorytet "Średni"
+    When agent wsparcia żąda rekomendacji klasyfikacji dla incydentu "INC-2026-0001"
+    Then w historii incydentu zapisane jest zdarzenie typu "RekomendacjaKlasyfikacjiWygenerowana"
+    And zdarzenie zawiera pola:
+      | incidentId | kategoria | priorytet | źródło |
+      | INC-2026-0001 | Sieć | Średni | LLM |
+
+  Scenario: Odczyt rekomendacji nie zmienia stanu lifecycle incydentu
+    Given bieżący stan incydentu "INC-2026-0001" to "Nowy"
+    And usługa LLM zwróciła kategorię "BazaDanych" oraz priorytet "Krytyczny"
+    When agent wsparcia pobiera rekomendację klasyfikacji dla incydentu "INC-2026-0001"
+    Then rekomendacja jest widoczna dla agenta
+    And stan incydentu pozostaje "Nowy"
+    And brak zdarzenia zmiany stanu w historii incydentu
+
+  Scenario: Kolejne zapytanie o rekomendację tworzy nowy wpis audytowy
+    Given dla incydentu "INC-2026-0001" istnieje już 1 zdarzenie typu "RekomendacjaKlasyfikacjiWygenerowana"
+    And usługa LLM zwraca nową rekomendację: kategoria "Bezpieczeństwo", priorytet "Krytyczny"
+    When agent wsparcia ponownie żąda rekomendacji klasyfikacji dla incydentu "INC-2026-0001"
+    Then historia incydentu zawiera 2 zdarzenia typu "RekomendacjaKlasyfikacjiWygenerowana"
+    And najnowsze zdarzenie zawiera kategorię "Bezpieczeństwo" i priorytet "Krytyczny"
+
+5. Ostateczne zatwierdzanie
+===========================
+
+Nadpisywanie rekomendacji LLM
+
+Given: Wygenerowana rekomendacja przez LLM, zalogowany agent wsparcia
+When: Użytkownik wciska przycisk edycji przy wypełnionej rekomendacji przez LLM.
+Then: Udostępniane jest pole edycji, w którym jest wypełniona rekomendacja LLM. Obok dostępny jest przycisk "Zapisz", który zapamiętuje zmiany i wychodzi z trybu edycji.
+
+Zapis ostatecznej decyzji w historii incydentu
+
+Given: Incydent z wypełnioną rekomendacją, zalogowany agent
+When: Użytkownik wciska przycisk "Zatwierdź rekomendację"
+Then: Pojawia się okienko "Czy na pewno chcesz zatwierdzić?", które użytkownik może zatwierdzić.
+
+Powiązanie zmiany klasyfikacji z wpływem na SLA
+
+Given: Zgłoszony incydent i umowa SLA
+When: Użytkownik zatwierdza zmiany klasyfikacji
+Then: System wyświetla naruszone punkty SLA i przewidziane kary

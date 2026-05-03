@@ -5,7 +5,8 @@ import pl.edu.uj.projzes.itl.domain.user.UserRole;
 
 import java.util.Set;
 
-public record MeResponse(
+public record AuthResponse(
+        String token,
         String userId,
         String username,
         UserRole role,

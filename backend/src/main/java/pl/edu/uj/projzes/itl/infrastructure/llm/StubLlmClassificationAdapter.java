@@ -4,10 +4,7 @@ import org.springframework.stereotype.Component;
 import pl.edu.uj.projzes.itl.domain.incident.IncidentCategory;
 import pl.edu.uj.projzes.itl.domain.incident.IncidentPriority;
 
-/**
- * Tymczasowy stub — zwraca stałą odpowiedź.
- * Należy zastąpić prawdziwą integracją z LLM.
- */
+
 @Component
 public class StubLlmClassificationAdapter implements LlmClassificationPort {
 

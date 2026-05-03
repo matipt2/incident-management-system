@@ -6,6 +6,5 @@ import pl.edu.uj.projzes.itl.domain.incident.IncidentPriority;
 
 public record ClassifyRequest(
         @NotNull IncidentPriority priority,
-        @NotNull IncidentCategory category,
-        @NotNull String performedBy
+        @NotNull IncidentCategory category
 ) {}

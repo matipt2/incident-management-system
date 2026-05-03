@@ -13,12 +13,10 @@ public class ClassificationService {
         this.llmPort = llmPort;
     }
 
-    /** Klasyfikuje incydent asynchronicznie i zapisuje wynik jako zdarzenie w historii. */
     public void classifyAsync(String incidentId) {
         throw new UnsupportedOperationException("TODO");
     }
 
-    /** Zwraca rekomendację LLM bez zapisywania — tryb podglądu. */
     public ClassificationResult preview(String title, String description) {
         throw new UnsupportedOperationException("TODO");
     }

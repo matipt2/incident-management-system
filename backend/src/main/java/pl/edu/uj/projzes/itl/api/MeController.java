@@ -18,6 +18,6 @@ public class MeController {
         if (user == null) {
             return ResponseEntity.status(401).build();
         }
-        return ResponseEntity.ok(new MeResponse(user.userId(), user.role(), user.role().getPermissions()));
+        return ResponseEntity.ok(new MeResponse(user.userId(), user.username(), user.role(), user.role().getPermissions()));
     }
 }
