@@ -7,6 +7,7 @@ import java.util.Set;
 
 public record MeResponse(
         String userId,
+        String username,
         UserRole role,
         Set<Permission> permissions
 ) {}

@@ -60,7 +60,27 @@ Po wygasnieciu nalezy ponownie wywolac POST /api/auth/login.
 409 - Rejestracja: nazwa uzytkownika lub e-mail juz zajete
 
 
-5. UPRAWNIENIA ROL
+5. DANE ZALOGOWANEGO UZYTKOWNIKA
+--------------------------------
+
+GET /api/me/resources
+Authorization: Bearer eyJhbGciOi...
+
+Odpowiedz (200):
+
+{
+  "userId": "uuid",
+  "username": "jan.kowalski",
+  "role": "AGENT",
+  "permissions": ["INCIDENT_REPORT", "INCIDENT_READ", "INCIDENT_ASSIGN", ...]
+}
+
+Mozna wywolac raz po zalogowaniu zamiast dekodowac token po stronie klienta.
+Przydatne do inicjalizacji stanu aplikacji (np. Redux store, Context).
+Zwraca 401 jesli token jest nieprawidlowy lub wygasl.
+
+
+6. UPRAWNIENIA ROL
 ------------------
 
 REPORTER  - zglaszanie i odczyt incydentow
