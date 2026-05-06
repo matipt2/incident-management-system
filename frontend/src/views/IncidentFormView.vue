@@ -2,13 +2,16 @@
 import { reactive, ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { createIncident } from '../services/incidentsApi'
+import { ApiError } from '../services/apiClient'
+import { useAuthStore } from '../stores/auth'
 
 const router = useRouter()
+const auth = useAuthStore()
 
 const form = reactive({
   title: '',
   description: '',
-  reportedBy: '',
+  reportedBy: auth.user.value?.username || '',
   channel: 'FORM',
   projectId: ''
 })
@@ -20,11 +23,13 @@ const isFormValid = computed(() => {
   return (
       form.title.trim() &&
       form.description.trim() &&
-      form.reportedBy.trim() &&
+      reportedByUsername.value.trim() &&
       form.channel.trim() &&
       form.projectId.trim()
   )
 })
+
+const reportedByUsername = computed(() => auth.user.value?.username || '')
 
 async function handleSubmit() {
   if (!isFormValid.value) return
@@ -36,7 +41,7 @@ async function handleSubmit() {
     const incident = await createIncident({
       title: form.title.trim(),
       description: form.description.trim(),
-      reportedBy: form.reportedBy.trim(),
+      reportedBy: reportedByUsername.value,
       channel: form.channel.trim(),
       projectId: form.projectId.trim()
     })
@@ -50,8 +55,18 @@ async function handleSubmit() {
       }
     })
   } catch (error) {
-    errorMessage.value =
-        error instanceof Error ? error.message : 'Something went wrong.'
+    if (error instanceof ApiError && error.status === 401) {
+      auth.logoutUser()
+      await router.push('/login')
+      return
+    }
+
+    if (error instanceof ApiError && error.status === 403) {
+      errorMessage.value = 'You do not have permission to create incidents.'
+      return
+    }
+
+    errorMessage.value = error instanceof Error ? error.message : 'Something went wrong.'
   } finally {
     isSubmitting.value = false
   }
@@ -97,10 +112,10 @@ async function handleSubmit() {
           <label for="reportedBy">Reported by</label>
           <input
               id="reportedBy"
-              v-model="form.reportedBy"
+              :value="reportedByUsername"
               type="text"
-              placeholder="E.g. John Smith"
-              required
+              readonly
+              disabled
           />
         </div>
 
