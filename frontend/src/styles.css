@@ -436,13 +436,29 @@ textarea {
 }
 
 .form-select {
+    appearance: none;
     width: 100%;
     color: var(--text);
-    background: rgba(2, 6, 12, 0.15);
+    background:
+            linear-gradient(45deg, transparent 50%, #bfdbfe 50%) right 18px center / 7px 7px no-repeat,
+            linear-gradient(135deg, #bfdbfe 50%, transparent 50%) right 13px center / 7px 7px no-repeat,
+            rgba(2, 6, 12, 0.32);
     border: 1px solid var(--border);
     border-radius: 18px;
-    padding: 14px 18px;
+    padding: 14px 44px 14px 18px;
     outline: none;
+    cursor: pointer;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+.form-select:focus {
+    border-color: rgba(96, 165, 250, 0.85);
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.16);
+}
+
+.form-select option {
+    color: #0f172a;
+    background: #f8fafc;
 }
 
 .text-link {
