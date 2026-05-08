@@ -1,9 +1,37 @@
+<script setup>
+import { computed } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { useAuthStore } from './stores/auth'
+
+const route = useRoute()
+const router = useRouter()
+const auth = useAuthStore()
+
+const pageTitle = computed(() => {
+  if (route.name === 'login') return 'Login'
+  if (route.name === 'register') return 'Registration'
+  return 'Report Incident'
+})
+
+async function handleLogout() {
+  auth.logoutUser()
+  await router.push('/login')
+}
+</script>
+
 <template>
   <div class="app-shell">
-    <header class="app-header">
-      <div>
+    <header class="app-header" :class="{ 'app-header--centered': !auth.isAuthenticated.value }">
+      <div class="app-header__main">
         <p class="app-header__eyebrow">Incident Management</p>
-        <h1 class="app-header__title">Report Incident</h1>
+        <h1 class="app-header__title">{{ pageTitle }}</h1>
+      </div>
+
+      <div v-if="auth.isAuthenticated.value" class="app-header__session">
+        <span class="app-header__user">
+          {{ auth.user.value?.username }} ({{ auth.user.value?.role }})
+        </span>
+        <button class="btn btn--ghost" type="button" @click="handleLogout">Logout</button>
       </div>
     </header>
 

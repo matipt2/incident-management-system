@@ -1,3 +1,5 @@
+import { apiFetch } from './apiClient'
+
 const USE_MOCK = false
 
 export async function createIncident(payload) {
@@ -9,17 +11,8 @@ export async function createIncident(payload) {
         }
     }
 
-    const response = await fetch('/api/incidents', {
+    return apiFetch('/api/incidents', {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
         body: JSON.stringify(payload)
     })
-
-    if (!response.ok) {
-        throw new Error('Error while creating incident.')
-    }
-
-    return response.json()
 }
