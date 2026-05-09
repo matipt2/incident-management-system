@@ -56,8 +56,7 @@ async function handleSubmit() {
     })
   } catch (error) {
     if (error instanceof ApiError && error.status === 401) {
-      auth.logoutUser()
-      await router.push('/login')
+      errorMessage.value = 'Your session seems expired or invalid. Please sign in again.'
       return
     }
 
