@@ -10,6 +10,7 @@ import spock.lang.Specification
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -110,12 +111,64 @@ class EndpointSecuritySpec extends Specification {
     }
 
     @WithMockUser(authorities = ["SLA_READ"])
-    def "użytkownik z uprawnieniem SLA_READ przechodzi kontrolę uprawnień (endpoint niezaimplementowany)"() {
+    def "użytkownik z uprawnieniem SLA_READ może listować naruszenia SLA"() {
         when:
         def result = mockMvc.perform(get("/api/sla/violations")).andReturn()
 
         then:
-        // Security passed - endpoint zwraca 501 (TODO), nie 401/403
-        result.response.status == 501
+        result.response.status == 200
+    }
+
+    @WithMockUser(authorities = ["SLA_READ"])
+    def "użytkownik bez uprawnienia SLA_WRITE nie może uruchomić sprawdzania SLA"() {
+        when:
+        def result = mockMvc.perform(post("/api/sla/check")).andReturn()
+
+        then:
+        result.response.status == 403
+    }
+
+    @WithMockUser(authorities = ["SLA_READ"])
+    def "użytkownik bez uprawnienia SLA_WRITE nie może tworzyć polityk SLA"() {
+        when:
+        def result = mockMvc.perform(
+                post("/api/sla/policies")
+                        .contentType("application/json")
+                        .content('{"projectId":"P","priority":"HIGH","responseTimeMinutes":10,"resolutionTimeMinutes":60,"penaltyAmount":100}'))
+                .andReturn()
+
+        then:
+        result.response.status == 403
+    }
+
+    @WithMockUser(authorities = ["SLA_READ"])
+    def "użytkownik bez uprawnienia SLA_WRITE nie może aktualizować polityk SLA"() {
+        when:
+        def result = mockMvc.perform(
+                put("/api/sla/policies/1")
+                        .contentType("application/json")
+                        .content('{"projectId":"P","priority":"HIGH","responseTimeMinutes":10,"resolutionTimeMinutes":60,"penaltyAmount":100}'))
+                .andReturn()
+
+        then:
+        result.response.status == 403
+    }
+
+    @WithMockUser(authorities = ["POSTMORTEM_READ"])
+    def "użytkownik bez POSTMORTEM_WRITE nie może tworzyć raportu post-mortem"() {
+        when:
+        def result = mockMvc.perform(post("/api/incidents/some-id/post-mortem")).andReturn()
+
+        then:
+        result.response.status == 403
+    }
+
+    @WithMockUser(authorities = ["POSTMORTEM_READ", "POSTMORTEM_WRITE"])
+    def "użytkownik bez POSTMORTEM_APPROVE nie może zatwierdzać raportu post-mortem"() {
+        when:
+        def result = mockMvc.perform(post("/api/incidents/some-id/post-mortem/approve")).andReturn()
+
+        then:
+        result.response.status == 403
     }
 }

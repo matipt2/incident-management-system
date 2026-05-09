@@ -7,7 +7,9 @@ import pl.edu.uj.projzes.itl.domain.incident.IncidentCategory;
 import pl.edu.uj.projzes.itl.domain.incident.IncidentEvent;
 import pl.edu.uj.projzes.itl.domain.incident.IncidentPriority;
 import pl.edu.uj.projzes.itl.domain.incident.IncidentStatus;
+import pl.edu.uj.projzes.itl.domain.postmortem.PostMortemStatus;
 import pl.edu.uj.projzes.itl.infrastructure.persistence.IncidentRepository;
+import pl.edu.uj.projzes.itl.infrastructure.persistence.PostMortemRepository;
 
 import java.time.Clock;
 import java.time.Instant;
@@ -18,10 +20,14 @@ import java.util.UUID;
 public class IncidentService {
 
     private final IncidentRepository incidentRepository;
+    private final PostMortemRepository postMortemRepository;
     private final Clock clock;
 
-    public IncidentService(IncidentRepository incidentRepository, Clock clock) {
+    public IncidentService(IncidentRepository incidentRepository,
+                           PostMortemRepository postMortemRepository,
+                           Clock clock) {
         this.incidentRepository = incidentRepository;
+        this.postMortemRepository = postMortemRepository;
         this.clock = clock;
     }
 
@@ -116,6 +122,7 @@ public class IncidentService {
     public Incident close(String incidentId, String performedBy) {
         Instant now = clock.instant();
         Incident incident = getById(incidentId);
+        ensurePostMortemApprovedIfCritical(incident);
 
         incident.setStatus(IncidentStatus.CLOSED);
         incident.setUpdatedAt(now);
@@ -143,6 +150,16 @@ public class IncidentService {
         return incidentRepository.findByStatus(status);
     }
 
+    @Transactional(readOnly = true)
+    public List<IncidentEvent> getEvents(String incidentId, String eventType,
+                                         Instant from, Instant to) {
+        return getById(incidentId).getEvents().stream()
+                .filter(event -> eventType == null || eventType.isBlank() || eventType.equals(event.getEventType()))
+                .filter(event -> from == null || !event.getOccurredAt().isBefore(from))
+                .filter(event -> to == null || !event.getOccurredAt().isAfter(to))
+                .toList();
+    }
+
     private void addEvent(Incident incident, String eventType, String details,
                           String performedBy, Instant occurredAt) {
         IncidentEvent event = new IncidentEvent();
@@ -153,5 +170,18 @@ public class IncidentService {
         event.setPerformedBy(performedBy);
         event.setOccurredAt(occurredAt);
         incident.getEvents().add(event);
+    }
+
+    private void ensurePostMortemApprovedIfCritical(Incident incident) {
+        if (incident.getPriority() != IncidentPriority.CRITICAL) {
+            return;
+        }
+
+        boolean approvedPostMortemExists = postMortemRepository.findByIncidentId(incident.getId())
+                .map(report -> report.getStatus() == PostMortemStatus.APPROVED)
+                .orElse(false);
+        if (!approvedPostMortemExists) {
+            throw new PostMortemRequiredException(incident.getId());
+        }
     }
 }

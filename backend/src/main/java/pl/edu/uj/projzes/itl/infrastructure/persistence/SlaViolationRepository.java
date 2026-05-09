@@ -9,5 +9,9 @@ public interface SlaViolationRepository extends JpaRepository<SlaViolation, Long
 
     List<SlaViolation> findByIncidentId(String incidentId);
 
+    List<SlaViolation> findByProjectId(String projectId);
+
     List<SlaViolation> findByProjectIdAndPenaltyApplied(String projectId, boolean penaltyApplied);
+
+    boolean existsByIncidentIdAndViolationType(String incidentId, SlaViolation.ViolationType violationType);
 }
