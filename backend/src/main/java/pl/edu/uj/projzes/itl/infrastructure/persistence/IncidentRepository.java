@@ -7,6 +7,7 @@ import pl.edu.uj.projzes.itl.domain.incident.IncidentPriority;
 import pl.edu.uj.projzes.itl.domain.incident.IncidentStatus;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface IncidentRepository extends JpaRepository<Incident, String>,
         JpaSpecificationExecutor<Incident> {
@@ -18,4 +19,10 @@ public interface IncidentRepository extends JpaRepository<Incident, String>,
     List<Incident> findByProjectId(String projectId);
 
     List<Incident> findByAssignedTo(String agentId);
+
+    List<Incident> findByReportedBy(String reportedBy);
+
+    Optional<Incident> findByIdAndReportedBy(String id, String reportedBy);
+
+    Optional<Incident> findByIdAndAssignedTo(String id, String assignedTo);
 }

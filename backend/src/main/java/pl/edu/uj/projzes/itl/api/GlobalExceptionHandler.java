@@ -38,6 +38,12 @@ public class GlobalExceptionHandler {
         return Map.of("error", "Access denied");
     }
 
+    @ExceptionHandler(IllegalArgumentException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public Map<String, String> handleIllegalArgument(IllegalArgumentException ex) {
+        return Map.of("error", ex.getMessage());
+    }
+
     @ExceptionHandler(UnsupportedOperationException.class)
     @ResponseStatus(HttpStatus.NOT_IMPLEMENTED)
     public Map<String, String> handleNotImplemented(UnsupportedOperationException ex) {
