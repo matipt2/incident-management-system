@@ -1,5 +1,4 @@
 .gradle
-gradlew
 build/
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
@@ -46,3 +45,4 @@ bin/
 frontend/node_modules/
 frontend/dist/
 frontend/.env.local
+gradlew
