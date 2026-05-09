@@ -2,17 +2,20 @@ package pl.edu.uj.projzes.itl.api;
 
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import pl.edu.uj.projzes.itl.api.dto.ClassifyRequest;
 import pl.edu.uj.projzes.itl.api.dto.CreateIncidentRequest;
+import pl.edu.uj.projzes.itl.api.dto.IncidentEventResponse;
 import pl.edu.uj.projzes.itl.api.dto.IncidentResponse;
 import pl.edu.uj.projzes.itl.application.IncidentService;
 import pl.edu.uj.projzes.itl.domain.incident.IncidentStatus;
 import pl.edu.uj.projzes.itl.domain.user.CurrentUser;
 import pl.edu.uj.projzes.itl.infrastructure.web.UserContextHolder;
 
+import java.time.Instant;
 import java.util.List;
 
 @RestController
@@ -53,6 +56,18 @@ public class IncidentController {
     @PreAuthorize("hasAuthority('INCIDENT_READ')")
     public IncidentResponse get(@PathVariable String id) {
         return IncidentResponse.from(incidentService.getById(id));
+    }
+
+    @GetMapping("/{id}/events")
+    @PreAuthorize("hasAuthority('INCIDENT_READ')")
+    public List<IncidentEventResponse> events(
+            @PathVariable String id,
+            @RequestParam(required = false) String eventType,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant from,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant to) {
+        return incidentService.getEvents(id, eventType, from, to).stream()
+                .map(IncidentEventResponse::from)
+                .toList();
     }
 
     @PostMapping("/{id}/assign")

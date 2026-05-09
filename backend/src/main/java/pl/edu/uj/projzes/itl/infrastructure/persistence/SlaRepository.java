@@ -8,5 +8,5 @@ import java.util.Optional;
 
 public interface SlaRepository extends JpaRepository<SlaPolicy, Long> {
 
-    Optional<SlaPolicy> findByProjectIdAndPriority(String projectId, IncidentPriority priority);
+    Optional<SlaPolicy> findFirstByProjectIdAndPriorityOrderByIdAsc(String projectId, IncidentPriority priority);
 }
