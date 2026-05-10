@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from './stores/auth'
+import AppSidebar from './components/AppSidebar.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -10,7 +11,14 @@ const auth = useAuthStore()
 const pageTitle = computed(() => {
   if (route.name === 'login') return 'Login'
   if (route.name === 'register') return 'Registration'
+  if (route.name === 'incidents-list') return 'Incidents'
+  if (route.name === 'incident-details') return 'Incident details'
+  if (route.name === 'incident-submitted') return 'Incident submitted'
   return 'Report Incident'
+})
+
+const showSidebar = computed(() => {
+  return auth.isAuthenticated.value && route.name !== 'incident-submitted'
 })
 
 async function handleLogout() {
@@ -35,8 +43,12 @@ async function handleLogout() {
       </div>
     </header>
 
-    <main class="app-content">
-      <RouterView />
-    </main>
+    <div class="workspace" :class="{ 'workspace--with-sidebar': showSidebar }">
+      <AppSidebar v-if="showSidebar" :role="auth.user.value?.role" />
+
+      <main class="app-content">
+        <RouterView />
+      </main>
+    </div>
   </div>
 </template>
