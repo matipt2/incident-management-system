@@ -1,5 +1,6 @@
 package pl.edu.uj.projzes.itl.api;
 
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -65,7 +66,7 @@ public class MyIncidentController {
         if (user == null) {
             String username = SecurityContextHolder.getContext().getAuthentication().getName();
             User resolved = userRepository.findByUsername(username)
-                    .orElseThrow(() -> new org.springframework.security.access.AccessDeniedException("No user context"));
+                    .orElseThrow(() -> new AccessDeniedException("No user context"));
             return new CurrentUser(resolved.getId().toString(), resolved.getUsername(), resolved.getRole());
         }
         return user;
