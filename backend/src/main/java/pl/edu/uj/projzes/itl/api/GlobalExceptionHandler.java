@@ -2,11 +2,16 @@ package pl.edu.uj.projzes.itl.api;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import pl.edu.uj.projzes.itl.application.IncidentNotFoundException;
 import pl.edu.uj.projzes.itl.application.InvalidCredentialsException;
+import pl.edu.uj.projzes.itl.application.PostMortemNotFoundException;
+import pl.edu.uj.projzes.itl.application.PostMortemRequiredException;
+import pl.edu.uj.projzes.itl.application.SlaPolicyNotFoundException;
+import pl.edu.uj.projzes.itl.application.SlaViolationNotFoundException;
 import pl.edu.uj.projzes.itl.application.UserAlreadyExistsException;
 
 import java.util.Map;
@@ -17,6 +22,24 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(IncidentNotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public Map<String, String> handleNotFound(IncidentNotFoundException ex) {
+        return Map.of("error", ex.getMessage());
+    }
+
+    @ExceptionHandler(PostMortemNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public Map<String, String> handlePostMortemNotFound(PostMortemNotFoundException ex) {
+        return Map.of("error", ex.getMessage());
+    }
+
+    @ExceptionHandler(SlaViolationNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public Map<String, String> handleSlaViolationNotFound(SlaViolationNotFoundException ex) {
+        return Map.of("error", ex.getMessage());
+    }
+
+    @ExceptionHandler(SlaPolicyNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public Map<String, String> handleSlaPolicyNotFound(SlaPolicyNotFoundException ex) {
         return Map.of("error", ex.getMessage());
     }
 
@@ -38,9 +61,31 @@ public class GlobalExceptionHandler {
         return Map.of("error", "Access denied");
     }
 
+    @ExceptionHandler(IllegalStateException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public Map<String, String> handleIllegalState(IllegalStateException ex) {
+        return Map.of("error", ex.getMessage());
+    }
+
     @ExceptionHandler(IllegalArgumentException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public Map<String, String> handleIllegalArgument(IllegalArgumentException ex) {
+        return Map.of("error", ex.getMessage());
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public Map<String, String> handleValidation(MethodArgumentNotValidException ex) {
+        String message = ex.getBindingResult().getFieldErrors().stream()
+                .findFirst()
+                .map(error -> error.getField() + ": " + error.getDefaultMessage())
+                .orElse("Validation failed");
+        return Map.of("error", message);
+    }
+
+    @ExceptionHandler(PostMortemRequiredException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public Map<String, String> handlePostMortemRequired(PostMortemRequiredException ex) {
         return Map.of("error", ex.getMessage());
     }
 

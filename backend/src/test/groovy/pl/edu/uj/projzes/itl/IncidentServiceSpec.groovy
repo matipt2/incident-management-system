@@ -5,6 +5,8 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.transaction.annotation.Transactional
 import pl.edu.uj.projzes.itl.application.IncidentNotFoundException
 import pl.edu.uj.projzes.itl.application.IncidentService
+import pl.edu.uj.projzes.itl.application.PostMortemRequiredException
+import pl.edu.uj.projzes.itl.application.PostMortemService
 import pl.edu.uj.projzes.itl.domain.incident.IncidentCategory
 import pl.edu.uj.projzes.itl.domain.incident.IncidentPriority
 import pl.edu.uj.projzes.itl.domain.incident.IncidentStatus
@@ -18,6 +20,9 @@ class IncidentServiceSpec extends Specification {
     @Subject
     @Autowired
     IncidentService incidentService
+
+    @Autowired
+    PostMortemService postMortemService
 
     // US1: Zgłoszenie incydentu
     def "zgłoszony incydent otrzymuje unikalny id i status NEW"() {
@@ -136,6 +141,35 @@ class IncidentServiceSpec extends Specification {
         then:
         resolved.status == IncidentStatus.RESOLVED
         resolved.resolvedAt != null
+    }
+
+    def "zamknięcie krytycznego incydentu wymaga zatwierdzonego post-mortem"() {
+        given:
+        def incident = incidentService.reportIncident("Krytyczna awaria", "Opis", "user", "API", "PROJ-1")
+        incidentService.applyClassification(incident.id, IncidentPriority.CRITICAL, IncidentCategory.APPLICATION, "agent1")
+        incidentService.resolve(incident.id, "Naprawione", "agent1")
+
+        when:
+        incidentService.close(incident.id, "manager")
+
+        then:
+        thrown(PostMortemRequiredException)
+    }
+
+    def "krytyczny incydent można zamknąć po zatwierdzeniu post-mortem"() {
+        given:
+        def incident = incidentService.reportIncident("Krytyczna awaria", "Opis", "user", "API", "PROJ-1")
+        incidentService.applyClassification(incident.id, IncidentPriority.CRITICAL, IncidentCategory.APPLICATION, "agent1")
+        incidentService.resolve(incident.id, "Naprawione", "agent1")
+        postMortemService.create(incident.id, "author")
+        postMortemService.update(incident.id, "Root cause", "Timeline", "Impact", "Action items", "author")
+        postMortemService.approve(incident.id, "manager")
+
+        when:
+        def closed = incidentService.close(incident.id, "manager")
+
+        then:
+        closed.status == IncidentStatus.CLOSED
     }
 
     // Filtrowanie

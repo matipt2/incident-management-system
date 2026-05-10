@@ -4,9 +4,9 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.transaction.annotation.Transactional
 import pl.edu.uj.projzes.itl.application.IncidentService
+import pl.edu.uj.projzes.itl.application.PostMortemNotFoundException
 import pl.edu.uj.projzes.itl.application.PostMortemService
 import pl.edu.uj.projzes.itl.domain.postmortem.PostMortemStatus
-import spock.lang.PendingFeature
 import spock.lang.Specification
 import spock.lang.Subject
 
@@ -21,7 +21,6 @@ class PostMortemServiceSpec extends Specification {
     @Autowired
     IncidentService incidentService
 
-    @PendingFeature
     def "tworzenie raportu post-mortem dla incydentu krytycznego"() {
         given:
         def incident = incidentService.reportIncident("Awaria krytyczna", "Opis", "user", "API", "PROJ-1")
@@ -35,7 +34,6 @@ class PostMortemServiceSpec extends Specification {
         report.status == PostMortemStatus.DRAFT
     }
 
-    @PendingFeature
     def "aktualizacja raportu post-mortem"() {
         given:
         def incident = incidentService.reportIncident("Awaria", "Opis", "user", "API", "PROJ-1")
@@ -49,7 +47,6 @@ class PostMortemServiceSpec extends Specification {
         updated.status == PostMortemStatus.DRAFT
     }
 
-    @PendingFeature
     def "zatwierdzenie raportu zmienia status na APPROVED"() {
         given:
         def incident = incidentService.reportIncident("Awaria", "Opis", "user", "API", "PROJ-1")
@@ -61,5 +58,38 @@ class PostMortemServiceSpec extends Specification {
 
         then:
         approved.status == PostMortemStatus.APPROVED
+    }
+
+    def "pobranie brakującego raportu zwraca błąd domenowy"() {
+        when:
+        postMortemService.getByIncidentId("missing-incident")
+
+        then:
+        thrown(PostMortemNotFoundException)
+    }
+
+    def "nie można zatwierdzić nieuzupełnionego raportu"() {
+        given:
+        def incident = incidentService.reportIncident("Awaria", "Opis", "user", "API", "PROJ-1")
+        postMortemService.create(incident.id, "author")
+
+        when:
+        postMortemService.approve(incident.id, "manager")
+
+        then:
+        thrown(IllegalStateException)
+    }
+
+    def "ponowne utworzenie raportu dla incydentu zwraca istniejący raport"() {
+        given:
+        def incident = incidentService.reportIncident("Awaria", "Opis", "user", "API", "PROJ-1")
+        def first = postMortemService.create(incident.id, "author")
+
+        when:
+        def second = postMortemService.create(incident.id, "other-author")
+
+        then:
+        second.id == first.id
+        second.author == "author"
     }
 }

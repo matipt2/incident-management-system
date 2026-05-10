@@ -13,4 +13,16 @@ public record SlaViolationResponse(
         Instant detectedAt,
         BigDecimal penalty,
         boolean penaltyApplied
-) {}
+) {
+    public static SlaViolationResponse from(SlaViolation violation) {
+        return new SlaViolationResponse(
+                violation.getId(),
+                violation.getIncidentId(),
+                violation.getProjectId(),
+                violation.getViolationType(),
+                violation.getDetectedAt(),
+                violation.getPenalty(),
+                violation.isPenaltyApplied()
+        );
+    }
+}
