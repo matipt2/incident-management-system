@@ -96,14 +96,6 @@ Testy backendu:
 
 Te testy uruchamiają się z profilem `test`, który używa PostgreSQL przez Testcontainers. Docker musi być dostępny.
 
-Test integracyjny z prawdziwym PostgreSQL przez Testcontainers:
-
-```bash
-./gradlew :backend:postgresIntegrationTest
-```
-
-Ten test wymaga działającego Dockera. Sprawdza start Springa, migracje Liquibase i podstawowy zapis danych przez JPA na PostgreSQL.
-
 ## Frontend 
 ### http://localhost:5173
 ```bash
