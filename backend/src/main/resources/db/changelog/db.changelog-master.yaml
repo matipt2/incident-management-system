@@ -1,0 +1,227 @@
+databaseChangeLog:
+  - changeSet:
+      id: 001-create-users
+      author: juch
+      changes:
+        - createTable:
+            tableName: users
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: username
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+                    unique: true
+              - column:
+                  name: email
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+                    unique: true
+              - column:
+                  name: password_hash
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: role
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+
+  - changeSet:
+      id: 002-create-incidents
+      author: juch
+      changes:
+        - createTable:
+            tableName: incidents
+            columns:
+              - column:
+                  name: id
+                  type: varchar(255)
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: title
+                  type: varchar(255)
+              - column:
+                  name: description
+                  type: text
+              - column:
+                  name: reported_by
+                  type: varchar(255)
+              - column:
+                  name: channel
+                  type: varchar(255)
+              - column:
+                  name: project_id
+                  type: varchar(255)
+              - column:
+                  name: assigned_to
+                  type: varchar(255)
+              - column:
+                  name: status
+                  type: varchar(255)
+              - column:
+                  name: priority
+                  type: varchar(255)
+              - column:
+                  name: category
+                  type: varchar(255)
+              - column:
+                  name: created_at
+                  type: timestamp
+              - column:
+                  name: updated_at
+                  type: timestamp
+              - column:
+                  name: resolved_at
+                  type: timestamp
+
+  - changeSet:
+      id: 003-create-incident-events
+      author: juch
+      changes:
+        - createTable:
+            tableName: incident_events
+            columns:
+              - column:
+                  name: id
+                  type: varchar(255)
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: incident_id
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: event_type
+                  type: varchar(255)
+              - column:
+                  name: details
+                  type: text
+              - column:
+                  name: performed_by
+                  type: varchar(255)
+              - column:
+                  name: occurred_at
+                  type: timestamp
+        - addForeignKeyConstraint:
+            baseTableName: incident_events
+            baseColumnNames: incident_id
+            constraintName: fk_incident_events_incident
+            referencedTableName: incidents
+            referencedColumnNames: id
+
+  - changeSet:
+      id: 004-create-sla-policies
+      author: juch
+      changes:
+        - createTable:
+            tableName: sla_policies
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: project_id
+                  type: varchar(255)
+              - column:
+                  name: priority
+                  type: varchar(255)
+              - column:
+                  name: response_time
+                  type: bigint
+              - column:
+                  name: resolution_time
+                  type: bigint
+              - column:
+                  name: penalty_amount
+                  type: decimal(19, 2)
+
+  - changeSet:
+      id: 005-create-sla-violations
+      author: juch
+      changes:
+        - createTable:
+            tableName: sla_violations
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: incident_id
+                  type: varchar(255)
+              - column:
+                  name: project_id
+                  type: varchar(255)
+              - column:
+                  name: violation_type
+                  type: varchar(255)
+              - column:
+                  name: detected_at
+                  type: timestamp
+              - column:
+                  name: penalty
+                  type: decimal(19, 2)
+              - column:
+                  name: penalty_applied
+                  type: boolean
+
+  - changeSet:
+      id: 006-create-post-mortem-reports
+      author: juch
+      changes:
+        - createTable:
+            tableName: post_mortem_reports
+            columns:
+              - column:
+                  name: id
+                  type: varchar(255)
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: incident_id
+                  type: varchar(255)
+              - column:
+                  name: root_cause
+                  type: varchar(255)
+              - column:
+                  name: timeline
+                  type: text
+              - column:
+                  name: impact
+                  type: text
+              - column:
+                  name: action_items
+                  type: text
+              - column:
+                  name: author
+                  type: varchar(255)
+              - column:
+                  name: created_at
+                  type: timestamp
+              - column:
+                  name: updated_at
+                  type: timestamp
+              - column:
+                  name: status
+                  type: varchar(255)
