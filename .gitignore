@@ -44,5 +44,7 @@ bin/
 ### Node ###
 frontend/node_modules/
 frontend/dist/
+frontend/cypress/screenshots/
+frontend/cypress/videos/
 frontend/.env.local
 gradlew

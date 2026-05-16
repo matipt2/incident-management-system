@@ -1,0 +1,21 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: incident-backend
+    environment:
+      JWT_SECRET: ${JWT_SECRET:-itl-incident-management-jwt-secret-key-for-dev-only-change-in-prod}
+      ITL_SLA_SCHEDULER_ENABLED: ${ITL_SLA_SCHEDULER_ENABLED:-true}
+    ports:
+      - "${BACKEND_PORT:-8080}:8080"
+
+  frontend:
+    build:
+      context: frontend
+      dockerfile: Dockerfile
+    container_name: incident-frontend
+    depends_on:
+      - backend
+    ports:
+      - "${FRONTEND_PORT:-5173}:80"

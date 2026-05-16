@@ -4,6 +4,8 @@
 
 - Java 21+
 - Gradle
+- Node.js 22+
+- Docker
 
 ## Struktura projektu
 
@@ -47,11 +49,23 @@ incident-management-system/
 - API: `http://localhost:8080`
 - Swagger UI: `http://localhost:8080/swagger-ui/index.html`
 
+## Uruchomienie przez Docker Compose
+
+```bash
+docker compose up --build
+```
+
+- Frontend: `http://localhost:5173`
+- Backend API: `http://localhost:8080`
+
+Główny `docker-compose.yml` buduje obrazy FE/BE. Backend używa domyślnej bazy H2 z `backend/src/main/resources/application.properties`.
+
 ## Testy
 
 ```bash
 ./gradlew :backend:test
 ```
+
 ## Frontend 
 ### http://localhost:5173
 ```bash
@@ -65,5 +79,6 @@ npm run dev
 ```bash
 cd frontend
 npm run test:unit
+npm run test:e2e:ci
 ```
 
