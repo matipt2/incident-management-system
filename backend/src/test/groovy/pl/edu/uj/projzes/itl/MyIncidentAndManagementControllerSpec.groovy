@@ -8,6 +8,8 @@ import org.springframework.http.MediaType
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.transaction.annotation.Transactional
 import pl.edu.uj.projzes.itl.application.IncidentService
+import pl.edu.uj.projzes.itl.domain.user.UserRole
+import pl.edu.uj.projzes.itl.infrastructure.persistence.UserRepository
 import spock.lang.Specification
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
@@ -26,6 +28,9 @@ class MyIncidentAndManagementControllerSpec extends Specification {
 
     @Autowired
     IncidentService incidentService
+
+    @Autowired
+    UserRepository userRepository
 
     def "reporter widzi tylko swoje incydenty przez /api/my/incidents"() {
         given:
@@ -130,6 +135,10 @@ class MyIncidentAndManagementControllerSpec extends Specification {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(registerBody)))
                 .andReturn()
+
+        def user = userRepository.findByUsername(username).orElseThrow()
+        user.role = UserRole.valueOf(role)
+        userRepository.saveAndFlush(user)
 
         def loginBody = [username: username, password: password]
         def loginResult = mockMvc.perform(post("/api/auth/login")

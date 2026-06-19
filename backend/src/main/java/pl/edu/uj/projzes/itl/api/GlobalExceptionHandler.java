@@ -7,12 +7,18 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import pl.edu.uj.projzes.itl.application.IncidentNotFoundException;
+import pl.edu.uj.projzes.itl.application.IncidentTransitionException;
 import pl.edu.uj.projzes.itl.application.InvalidCredentialsException;
 import pl.edu.uj.projzes.itl.application.PostMortemNotFoundException;
 import pl.edu.uj.projzes.itl.application.PostMortemRequiredException;
 import pl.edu.uj.projzes.itl.application.SlaPolicyNotFoundException;
 import pl.edu.uj.projzes.itl.application.SlaViolationNotFoundException;
 import pl.edu.uj.projzes.itl.application.UserAlreadyExistsException;
+import pl.edu.uj.projzes.itl.application.UserNotFoundException;
+import pl.edu.uj.projzes.itl.application.UserRoleChangeException;
+import pl.edu.uj.projzes.itl.application.ProjectAlreadyExistsException;
+import pl.edu.uj.projzes.itl.application.ProjectInactiveException;
+import pl.edu.uj.projzes.itl.application.ProjectNotFoundException;
 
 import java.util.Map;
 
@@ -22,6 +28,30 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(IncidentNotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public Map<String, String> handleNotFound(IncidentNotFoundException ex) {
+        return Map.of("error", ex.getMessage());
+    }
+
+    @ExceptionHandler(ProjectNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public Map<String, String> handleProjectNotFound(ProjectNotFoundException ex) {
+        return Map.of("error", ex.getMessage());
+    }
+
+    @ExceptionHandler(UserNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public Map<String, String> handleUserNotFound(UserNotFoundException ex) {
+        return Map.of("error", ex.getMessage());
+    }
+
+    @ExceptionHandler({ProjectAlreadyExistsException.class, ProjectInactiveException.class})
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public Map<String, String> handleProjectConflict(RuntimeException ex) {
+        return Map.of("error", ex.getMessage());
+    }
+
+    @ExceptionHandler(UserRoleChangeException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public Map<String, String> handleUserRoleChange(UserRoleChangeException ex) {
         return Map.of("error", ex.getMessage());
     }
 
@@ -86,6 +116,12 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(PostMortemRequiredException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
     public Map<String, String> handlePostMortemRequired(PostMortemRequiredException ex) {
+        return Map.of("error", ex.getMessage());
+    }
+
+    @ExceptionHandler(IncidentTransitionException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public Map<String, String> handleIncidentTransition(IncidentTransitionException ex) {
         return Map.of("error", ex.getMessage());
     }
 

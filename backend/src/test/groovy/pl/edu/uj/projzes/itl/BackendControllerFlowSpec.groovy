@@ -15,6 +15,7 @@ import pl.edu.uj.projzes.itl.domain.incident.IncidentPriority
 import pl.edu.uj.projzes.itl.domain.user.User
 import pl.edu.uj.projzes.itl.domain.user.UserRole
 import pl.edu.uj.projzes.itl.infrastructure.persistence.IncidentRepository
+import pl.edu.uj.projzes.itl.infrastructure.persistence.UserRepository
 import pl.edu.uj.projzes.itl.infrastructure.security.JwtService
 import spock.lang.Specification
 
@@ -49,10 +50,14 @@ class BackendControllerFlowSpec extends Specification {
     @Autowired
     JwtService jwtService
 
+    @Autowired
+    UserRepository userRepository
+
     def "niepoprawna polityka SLA z realnym tokenem JWT zwraca 400"() {
         given:
         def user = new User("jwt_validation", "jwt_validation@example.com", "hash", UserRole.MANAGER)
         user.id = UUID.randomUUID()
+        userRepository.saveAndFlush(user)
         def token = jwtService.generateToken(user)
         def body = [
                 projectId             : "",
@@ -340,6 +345,7 @@ class BackendControllerFlowSpec extends Specification {
         given:
         def incident = incidentService.reportIncident("Krytyczna awaria", "Opis", "user", "API", "PROJ-CRIT")
         incidentService.applyClassification(incident.id, IncidentPriority.CRITICAL, IncidentCategory.SECURITY, "agent1")
+        incidentService.assignToAgent(incident.id, "agent1")
         incidentService.resolve(incident.id, "Naprawione", "agent1")
 
         when:

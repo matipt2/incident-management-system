@@ -3,32 +3,22 @@ import { computed } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 
 const props = defineProps({
-  role: {
-    type: String,
-    default: ''
+  permissions: {
+    type: Array,
+    default: () => []
   }
 })
 
 const route = useRoute()
 
 const links = computed(() => {
-  if (props.role === 'REPORTER') {
-    return [
-      { to: '/report', label: 'Report incident' },
-      { to: '/incidents', label: 'My incidents' }
-    ]
-  }
-
-  if (props.role === 'AGENT') {
-    return [
-      { to: '/incidents', label: 'Assigned incidents' }
-    ]
-  }
-
-  return [
-    { to: '/report', label: 'Report incident' },
-    { to: '/incidents', label: 'All incidents' }
-  ]
+  const permissions = new Set(props.permissions)
+  const items = [{ to: '/incidents', label: 'Incidents' }]
+  if (permissions.has('INCIDENT_REPORT')) items.unshift({ to: '/report', label: 'Report incident' })
+  if (permissions.has('SLA_READ')) items.push({ to: '/sla', label: 'SLA' })
+  if (permissions.has('PROJECT_WRITE')) items.push({ to: '/projects', label: 'Projects' })
+  if (permissions.has('USER_MANAGE')) items.push({ to: '/users', label: 'User roles' })
+  return items
 })
 
 function isActive(path) {

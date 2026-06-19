@@ -7,20 +7,26 @@ import static pl.edu.uj.projzes.itl.domain.user.Permission.*;
 
 public enum UserRole {
 
+    VIEWER(EnumSet.of(
+            INCIDENT_READ,
+            PROJECT_READ
+    )),
+
     REPORTER(EnumSet.of(
             INCIDENT_REPORT,
-            INCIDENT_READ
+            INCIDENT_READ,
+            PROJECT_READ
     )),
 
     AGENT(EnumSet.of(
             INCIDENT_REPORT,
             INCIDENT_READ,
-            INCIDENT_ASSIGN,
             INCIDENT_CLASSIFY,
+            INCIDENT_ESCALATE,
             INCIDENT_RESOLVE,
-            INCIDENT_CLOSE,
             SLA_READ,
-            POSTMORTEM_READ
+            POSTMORTEM_READ,
+            PROJECT_READ
     )),
 
     MANAGER(EnumSet.allOf(Permission.class));

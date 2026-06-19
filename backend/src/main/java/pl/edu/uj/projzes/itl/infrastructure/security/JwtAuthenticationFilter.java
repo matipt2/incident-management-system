@@ -10,17 +10,21 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
 import pl.edu.uj.projzes.itl.domain.user.CurrentUser;
 import pl.edu.uj.projzes.itl.domain.user.UserRole;
+import pl.edu.uj.projzes.itl.infrastructure.persistence.UserRepository;
 import pl.edu.uj.projzes.itl.infrastructure.web.UserContextHolder;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.UUID;
 
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
+    private final UserRepository userRepository;
 
-    public JwtAuthenticationFilter(JwtService jwtService) {
+    public JwtAuthenticationFilter(JwtService jwtService, UserRepository userRepository) {
         this.jwtService = jwtService;
+        this.userRepository = userRepository;
     }
 
     @Override
@@ -31,8 +35,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             String token = extractToken(request);
             if (token != null && jwtService.isValid(token)) {
                 String userId = jwtService.extractUserId(token);
-                String username = jwtService.extractUsername(token);
-                UserRole role = jwtService.extractRole(token);
+                var user = userRepository.findById(UUID.fromString(userId)).orElse(null);
+                if (user == null) {
+                    filterChain.doFilter(request, response);
+                    return;
+                }
+                String username = user.getUsername();
+                UserRole role = user.getRole();
 
                 UserContextHolder.set(new CurrentUser(userId, username, role));
 

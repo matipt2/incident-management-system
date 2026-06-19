@@ -9,14 +9,14 @@ describe('authentication flow', () => {
       userId: 'user-1',
       username: 'reporter',
       role: 'REPORTER',
-      permissions: ['INCIDENT_REPORT', 'INCIDENT_READ']
+      permissions: ['INCIDENT_REPORT', 'INCIDENT_READ', 'PROJECT_READ']
     }).as('login')
 
     cy.intercept('GET', '/api/me/resources', {
       userId: 'user-1',
       username: 'reporter',
       role: 'REPORTER',
-      permissions: ['INCIDENT_REPORT', 'INCIDENT_READ']
+      permissions: ['INCIDENT_REPORT', 'INCIDENT_READ', 'PROJECT_READ']
     }).as('fetchMe')
     cy.intercept('GET', '/api/my/incidents*', []).as('listIncidents')
 
@@ -36,11 +36,11 @@ describe('authentication flow', () => {
     cy.intercept('POST', '/api/auth/register', {
       statusCode: 201,
       body: {
-        token: 'jwt-token',
         userId: 'user-2',
         username: 'newreporter',
+        email: 'newreporter@example.com',
         role: 'REPORTER',
-        permissions: ['INCIDENT_REPORT', 'INCIDENT_READ']
+        permissions: ['INCIDENT_REPORT', 'INCIDENT_READ', 'PROJECT_READ']
       }
     }).as('register')
 
@@ -49,7 +49,6 @@ describe('authentication flow', () => {
     cy.get('#username').type('newreporter')
     cy.get('#email').type('newreporter@example.com')
     cy.get('#password').type('password123')
-    cy.get('#role').select('REPORTER')
     cy.contains('button', 'Create account').click()
 
     cy.wait('@register')

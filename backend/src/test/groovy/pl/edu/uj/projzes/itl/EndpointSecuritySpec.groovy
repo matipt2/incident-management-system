@@ -66,26 +66,19 @@ class EndpointSecuritySpec extends Specification {
     @WithMockUser(authorities = ["INCIDENT_READ", "INCIDENT_REPORT"])
     def "użytkownik bez uprawnienia INCIDENT_ASSIGN dostaje 403 na przypisaniu"() {
         when:
-        def result = mockMvc.perform(
-                post("/api/incidents/some-id/assign")
-                        .param("agentId", "agent1"))
-                .andReturn()
+        def result = mockMvc.perform(get("/api/management/agents")).andReturn()
 
         then:
         result.response.status == 403
     }
 
     @WithMockUser(authorities = ["INCIDENT_READ", "INCIDENT_ASSIGN"])
-    def "użytkownik z uprawnieniem INCIDENT_ASSIGN przechodzi kontrolę uprawnień (błąd biznesowy, nie auth)"() {
+    def "użytkownik z uprawnieniem INCIDENT_ASSIGN może listować agentów"() {
         when:
-        def result = mockMvc.perform(
-                post("/api/incidents/nonexistent-id/assign")
-                        .param("agentId", "agent1"))
-                .andReturn()
+        def result = mockMvc.perform(get("/api/management/agents")).andReturn()
 
         then:
-        // Security passed - incydent nie istnieje, więc spodziewamy się 404
-        result.response.status == 404
+        result.response.status == 200
     }
 
     @WithMockUser(authorities = ["INCIDENT_READ"])

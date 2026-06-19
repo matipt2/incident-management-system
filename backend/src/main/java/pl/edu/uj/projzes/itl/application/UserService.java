@@ -6,9 +6,14 @@ import org.springframework.transaction.annotation.Transactional;
 import pl.edu.uj.projzes.itl.api.dto.AuthResponse;
 import pl.edu.uj.projzes.itl.api.dto.LoginRequest;
 import pl.edu.uj.projzes.itl.api.dto.RegisterRequest;
+import pl.edu.uj.projzes.itl.api.dto.UserResponse;
 import pl.edu.uj.projzes.itl.domain.user.User;
+import pl.edu.uj.projzes.itl.domain.user.UserRole;
 import pl.edu.uj.projzes.itl.infrastructure.persistence.UserRepository;
 import pl.edu.uj.projzes.itl.infrastructure.security.JwtService;
+
+import java.util.List;
+import java.util.UUID;
 
 @Service
 public class UserService {
@@ -24,7 +29,7 @@ public class UserService {
     }
 
     @Transactional
-    public AuthResponse register(RegisterRequest request) {
+    public UserResponse register(RegisterRequest request) {
         if (userRepository.existsByUsername(request.username())) {
             throw new UserAlreadyExistsException("Username already taken: " + request.username());
         }
@@ -36,10 +41,10 @@ public class UserService {
                 request.username(),
                 request.email(),
                 passwordEncoder.encode(request.password()),
-                request.roleOrDefault()
+                UserRole.REPORTER
         );
         userRepository.save(user);
-        return toAuthResponse(user);
+        return UserResponse.from(user);
     }
 
     @Transactional(readOnly = true)
@@ -63,5 +68,45 @@ public class UserService {
                 user.getRole(),
                 user.getRole().getPermissions()
         );
+    }
+
+    @Transactional(readOnly = true)
+    public List<User> getAllUsers() {
+        return userRepository.findAllByOrderByUsernameAsc();
+    }
+
+    @Transactional
+    public User updateRole(UUID userId, UserRole role, String performedBy) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException(userId.toString()));
+
+        if (user.getUsername().equals(performedBy) && user.getRole() != role) {
+            throw new UserRoleChangeException("Managers cannot change their own role");
+        }
+        if (user.getRole() == UserRole.MANAGER
+                && role != UserRole.MANAGER
+                && userRepository.countByRole(UserRole.MANAGER) <= 1) {
+            throw new UserRoleChangeException("The final manager cannot be demoted");
+        }
+
+        user.setRole(role);
+        return userRepository.save(user);
+    }
+
+    @Transactional
+    public User createBootstrapManager(String username, String email, String password) {
+        if (userRepository.countByRole(UserRole.MANAGER) > 0) {
+            return null;
+        }
+        if (userRepository.existsByUsername(username) || userRepository.existsByEmail(email)) {
+            throw new UserAlreadyExistsException("Bootstrap manager username or email already exists");
+        }
+        User manager = new User(
+                username.trim(),
+                email.trim(),
+                passwordEncoder.encode(password),
+                UserRole.MANAGER
+        );
+        return userRepository.save(manager);
     }
 }

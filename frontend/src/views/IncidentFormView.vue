@@ -1,9 +1,10 @@
 <script setup>
-import { reactive, ref, computed } from 'vue'
+import { reactive, ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { createIncident } from '../services/incidentsApi'
 import { ApiError } from '../services/apiClient'
 import { useAuthStore } from '../stores/auth'
+import { fetchProjects } from '../services/projectsApi'
 
 const router = useRouter()
 const auth = useAuthStore()
@@ -18,6 +19,7 @@ const form = reactive({
 
 const isSubmitting = ref(false)
 const errorMessage = ref('')
+const projects = ref([])
 
 const isFormValid = computed(() => {
   return (
@@ -70,6 +72,17 @@ async function handleSubmit() {
     isSubmitting.value = false
   }
 }
+
+onMounted(async () => {
+  try {
+    projects.value = await fetchProjects()
+    if (projects.value.length === 1) {
+      form.projectId = projects.value[0].key
+    }
+  } catch (error) {
+    errorMessage.value = error instanceof Error ? error.message : 'Failed to load projects.'
+  }
+})
 </script>
 
 <template>
@@ -131,13 +144,17 @@ async function handleSubmit() {
 
         <div class="form-field form-field--full">
           <label for="projectId">Project ID</label>
-          <input
+          <select
               id="projectId"
               v-model="form.projectId"
-              type="text"
-              placeholder="E.g. payments-platform"
+              class="form-select"
               required
-          />
+          >
+            <option value="" disabled>Select project</option>
+            <option v-for="project in projects" :key="project.key" :value="project.key">
+              {{ project.name }} ({{ project.key }})
+            </option>
+          </select>
         </div>
 
         <div v-if="errorMessage" class="alert alert--error">

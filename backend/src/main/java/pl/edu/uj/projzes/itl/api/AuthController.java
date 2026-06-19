@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.*;
 import pl.edu.uj.projzes.itl.api.dto.AuthResponse;
 import pl.edu.uj.projzes.itl.api.dto.LoginRequest;
 import pl.edu.uj.projzes.itl.api.dto.RegisterRequest;
+import pl.edu.uj.projzes.itl.api.dto.UserResponse;
 import pl.edu.uj.projzes.itl.application.UserService;
 
 @RestController
@@ -20,7 +21,7 @@ public class AuthController {
 
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED)
-    public AuthResponse register(@Valid @RequestBody RegisterRequest request) {
+    public UserResponse register(@Valid @RequestBody RegisterRequest request) {
         return userService.register(request);
     }
 

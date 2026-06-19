@@ -7,13 +7,10 @@ import { useAuthStore } from '../stores/auth'
 const router = useRouter()
 const auth = useAuthStore()
 
-const roles = ['REPORTER', 'AGENT', 'MANAGER']
-
 const form = reactive({
     username: '',
     email: '',
-    password: '',
-    role: 'REPORTER'
+    password: ''
 })
 
 const isSubmitting = ref(false)
@@ -24,8 +21,7 @@ const isFormValid = computed(() => {
     return (
         form.username.trim() &&
         form.email.trim() &&
-        form.password.trim().length >= 8 &&
-        roles.includes(form.role)
+        form.password.trim().length >= 8
     )
 })
 
@@ -40,8 +36,7 @@ async function handleSubmit() {
         await auth.registerUser({
             username: form.username.trim(),
             email: form.email.trim(),
-            password: form.password,
-            role: form.role
+            password: form.password
         })
 
         successMessage.value = 'Account created. You can now sign in.'
@@ -76,16 +71,9 @@ async function handleSubmit() {
           <input id="email" v-model="form.email" type="email" autocomplete="email" required />
         </div>
 
-        <div class="form-field">
+        <div class="form-field form-field--full">
           <label for="password">Password (min. 8 characters)</label>
           <input id="password" v-model="form.password" type="password" autocomplete="new-password" required minlength="8" />
-        </div>
-
-        <div class="form-field">
-          <label for="role">Role</label>
-          <select id="role" v-model="form.role" class="form-select">
-            <option v-for="role in roles" :key="role" :value="role">{{ role }}</option>
-          </select>
         </div>
 
         <div v-if="errorMessage" class="alert alert--error form-field--full">

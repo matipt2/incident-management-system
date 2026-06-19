@@ -41,8 +41,7 @@ describe('authApi', () => {
         await register({
             username: 'jan.kowalski',
             email: 'jan@example.com',
-            password: 'password123',
-            role: 'REPORTER'
+            password: 'password123'
         })
 
         const [path, options] = fetch.mock.calls[0]
@@ -52,8 +51,7 @@ describe('authApi', () => {
         expect(JSON.parse(options.body)).toEqual({
             username: 'jan.kowalski',
             email: 'jan@example.com',
-            password: 'password123',
-            role: 'REPORTER'
+            password: 'password123'
         })
     })
 

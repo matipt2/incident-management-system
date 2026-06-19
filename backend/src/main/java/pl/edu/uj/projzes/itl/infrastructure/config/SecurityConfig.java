@@ -15,6 +15,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import jakarta.servlet.http.HttpServletResponse;
 import pl.edu.uj.projzes.itl.infrastructure.security.JwtAuthenticationFilter;
 import pl.edu.uj.projzes.itl.infrastructure.security.JwtService;
+import pl.edu.uj.projzes.itl.infrastructure.persistence.UserRepository;
 
 @Configuration
 @EnableWebSecurity
@@ -22,9 +23,11 @@ import pl.edu.uj.projzes.itl.infrastructure.security.JwtService;
 public class SecurityConfig {
 
     private final JwtService jwtService;
+    private final UserRepository userRepository;
 
-    public SecurityConfig(JwtService jwtService) {
+    public SecurityConfig(JwtService jwtService, UserRepository userRepository) {
         this.jwtService = jwtService;
+        this.userRepository = userRepository;
     }
 
     @Bean
@@ -45,7 +48,10 @@ public class SecurityConfig {
                         .authenticationEntryPoint((req, res, ex) ->
                                 res.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized"))
                 )
-                .addFilterBefore(new JwtAuthenticationFilter(jwtService), UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(
+                        new JwtAuthenticationFilter(jwtService, userRepository),
+                        UsernamePasswordAuthenticationFilter.class
+                )
                 .build();
     }
 

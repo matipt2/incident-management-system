@@ -21,19 +21,23 @@ public class IncidentService {
 
     private final IncidentRepository incidentRepository;
     private final PostMortemRepository postMortemRepository;
+    private final ProjectService projectService;
     private final Clock clock;
 
     public IncidentService(IncidentRepository incidentRepository,
                            PostMortemRepository postMortemRepository,
+                           ProjectService projectService,
                            Clock clock) {
         this.incidentRepository = incidentRepository;
         this.postMortemRepository = postMortemRepository;
+        this.projectService = projectService;
         this.clock = clock;
     }
 
     @Transactional
     public Incident reportIncident(String title, String description,
                                    String reportedBy, String channel, String projectId) {
+        String validatedProjectKey = projectService.requireActive(projectId).getKey();
         Instant now = clock.instant();
 
         Incident incident = new Incident();
@@ -42,7 +46,7 @@ public class IncidentService {
         incident.setDescription(description);
         incident.setReportedBy(reportedBy);
         incident.setChannel(channel);
-        incident.setProjectId(projectId);
+        incident.setProjectId(validatedProjectKey);
         incident.setStatus(IncidentStatus.NEW);
         incident.setCreatedAt(now);
         incident.setUpdatedAt(now);
@@ -56,16 +60,30 @@ public class IncidentService {
 
     @Transactional
     public Incident assignToAgent(String incidentId, String agentId) {
+        return assignToAgent(incidentId, agentId, agentId);
+    }
+
+    @Transactional
+    public Incident assignToAgent(String incidentId, String agentId, String performedBy) {
         Instant now = clock.instant();
         Incident incident = getById(incidentId);
+        requireStatus(
+                incident,
+                "assign",
+                IncidentStatus.NEW,
+                IncidentStatus.IN_PROGRESS,
+                IncidentStatus.ESCALATED
+        );
 
         incident.setAssignedTo(agentId);
-        incident.setStatus(IncidentStatus.IN_PROGRESS);
+        if (incident.getStatus() == IncidentStatus.NEW) {
+            incident.setStatus(IncidentStatus.IN_PROGRESS);
+        }
         incident.setUpdatedAt(now);
 
         addEvent(incident, "ASSIGNED",
                 "Incydent przypisany do agenta: " + agentId,
-                agentId, now);
+                performedBy, now);
 
         return incidentRepository.save(incident);
     }
@@ -75,6 +93,13 @@ public class IncidentService {
                                         IncidentCategory category, String performedBy) {
         Instant now = clock.instant();
         Incident incident = getById(incidentId);
+        requireStatus(
+                incident,
+                "classify",
+                IncidentStatus.NEW,
+                IncidentStatus.IN_PROGRESS,
+                IncidentStatus.ESCALATED
+        );
 
         incident.setPriority(priority);
         incident.setCategory(category);
@@ -91,6 +116,7 @@ public class IncidentService {
     public Incident escalate(String incidentId, String reason, String performedBy) {
         Instant now = clock.instant();
         Incident incident = getById(incidentId);
+        requireStatus(incident, "escalate", IncidentStatus.NEW, IncidentStatus.IN_PROGRESS);
 
         incident.setStatus(IncidentStatus.ESCALATED);
         incident.setUpdatedAt(now);
@@ -106,6 +132,7 @@ public class IncidentService {
     public Incident resolve(String incidentId, String resolution, String performedBy) {
         Instant now = clock.instant();
         Incident incident = getById(incidentId);
+        requireStatus(incident, "resolve", IncidentStatus.IN_PROGRESS, IncidentStatus.ESCALATED);
 
         incident.setStatus(IncidentStatus.RESOLVED);
         incident.setResolvedAt(now);
@@ -122,6 +149,7 @@ public class IncidentService {
     public Incident close(String incidentId, String performedBy) {
         Instant now = clock.instant();
         Incident incident = getById(incidentId);
+        requireStatus(incident, "close", IncidentStatus.RESOLVED);
         ensurePostMortemApprovedIfCritical(incident);
 
         incident.setStatus(IncidentStatus.CLOSED);
@@ -183,5 +211,14 @@ public class IncidentService {
         if (!approvedPostMortemExists) {
             throw new PostMortemRequiredException(incident.getId());
         }
+    }
+
+    private void requireStatus(Incident incident, String action, IncidentStatus... allowedStatuses) {
+        for (IncidentStatus allowedStatus : allowedStatuses) {
+            if (incident.getStatus() == allowedStatus) {
+                return;
+            }
+        }
+        throw new IncidentTransitionException(action, incident.getStatus());
     }
 }

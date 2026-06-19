@@ -33,7 +33,7 @@ public class IncidentVisibilityService {
         List<Incident> base = switch (user.role()) {
             case REPORTER -> incidentRepository.findByReportedBy(user.username());
             case AGENT -> incidentRepository.findByAssignedTo(user.username());
-            case MANAGER -> incidentRepository.findAll();
+            case VIEWER, MANAGER -> incidentRepository.findAll();
         };
 
         return base.stream()
@@ -53,7 +53,7 @@ public class IncidentVisibilityService {
                     .orElseThrow(() -> new IncidentNotFoundException(incidentId));
             case AGENT -> incidentRepository.findByIdAndAssignedTo(incidentId, user.username())
                     .orElseThrow(() -> new IncidentNotFoundException(incidentId));
-            case MANAGER -> incidentRepository.findById(incidentId)
+            case VIEWER, MANAGER -> incidentRepository.findById(incidentId)
                     .orElseThrow(() -> new IncidentNotFoundException(incidentId));
         };
     }

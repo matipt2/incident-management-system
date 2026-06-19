@@ -57,6 +57,20 @@ cd ..
 - API: `http://localhost:8080`
 - Swagger UI: `http://localhost:8080/swagger-ui/index.html`
 
+## Pierwszy manager
+
+Publiczna rejestracja zawsze tworzy konto z rolą `REPORTER`. Pierwsze konto
+managera można utworzyć przy starcie aplikacji przez zmienne środowiskowe:
+
+```bash
+export ITL_BOOTSTRAP_MANAGER_USERNAME=manager
+export ITL_BOOTSTRAP_MANAGER_EMAIL=manager@example.com
+export ITL_BOOTSTRAP_MANAGER_PASSWORD='change-me'
+```
+
+Konto jest tworzone tylko wtedy, gdy w bazie nie istnieje jeszcze żaden
+manager. W środowisku produkcyjnym należy również ustawić własny `JWT_SECRET`.
+
 ## Uruchomienie przez Docker Compose
 
 ```bash
@@ -69,6 +83,57 @@ docker compose up --build
 
 Główny `docker-compose.yml` buduje obrazy FE/BE i uruchamia PostgreSQL. Backend domyślnie używa PostgreSQL, a schemat bazy jest zarządzany przez Liquibase po stronie backendu.
 
+Zmienne `ITL_BOOTSTRAP_MANAGER_USERNAME`, `ITL_BOOTSTRAP_MANAGER_EMAIL` i
+`ITL_BOOTSTRAP_MANAGER_PASSWORD` można przekazać również do `docker compose`.
+
+## Role i uprawnienia
+
+- `REPORTER` zgłasza incydenty i widzi własne zgłoszenia.
+- `AGENT` widzi przypisane incydenty oraz może je klasyfikować, eskalować i rozwiązywać.
+- `VIEWER` ma dostęp tylko do odczytu wszystkich incydentów.
+- `MANAGER` zarządza projektami, rolami użytkowników, przypisaniami i zamykaniem incydentów.
+
+Manager nie może obniżyć własnej roli ani roli ostatniego managera.
+
+## Projekty i workflow incydentów
+
+Projekty mają niezmienny klucz, nazwę, opis i status aktywności. Nieaktywny
+projekt pozostaje widoczny w danych historycznych, ale nie można dla niego
+tworzyć nowych incydentów ani zmieniać polityk SLA.
+
+Główne endpointy administracyjne:
+
+```text
+GET    /api/projects
+GET    /api/projects/{key}
+POST   /api/projects
+PUT    /api/projects/{key}
+PATCH  /api/projects/{key}/status
+GET    /api/management/users
+PATCH  /api/management/users/{id}/role
+```
+
+Dozwolone przejścia statusów:
+
+```text
+assignment: NEW -> IN_PROGRESS
+reassignment: IN_PROGRESS or ESCALATED
+escalation: NEW or IN_PROGRESS -> ESCALATED
+resolution: IN_PROGRESS or ESCALATED -> RESOLVED
+closure: RESOLVED -> CLOSED (manager only)
+```
+
+Zamknięcie incydentu krytycznego nadal wymaga zatwierdzonego post-mortem.
+Niedozwolone przejścia zwracają `409 Conflict`.
+
+Frontend udostępnia pełny workflow:
+
+- klasyfikację priorytetu i kategorii przez przypisanego agenta lub managera,
+- przypisanie, eskalację, rozwiązanie i zamknięcie incydentu,
+- utworzenie, edycję i zatwierdzenie post-mortem,
+- podgląd naruszeń SLA na szczegółach incydentu,
+- zarządzanie politykami SLA i karami na stronie `/sla`.
+
 ## Uruchomienie całego stacka lokalnie
 
 Na macOS/Linux można uruchomić bazę, backend i frontend jednym skryptem:
@@ -78,6 +143,19 @@ bash ./scripts/run-local.sh
 ```
 
 Skrypt uruchamia główny `docker-compose.yml`, buduje obrazy FE/BE i startuje PostgreSQL.
+
+Wariant deweloperski z managerem `manager / manager123`:
+
+```bash
+bash ./scripts/run-local-seeded.sh
+```
+
+Liquibase tworzy również projekty `PROJ-1` i `PROJ-SLA`. Skrypt dodaje incydent
+`DEMO-SLA-1`, zgłoszony trzy godziny wcześniej, oraz uruchamia sprawdzenie SLA.
+Na stronie `/sla` są dzięki temu widoczne przykładowe naruszenia czasu reakcji
+i rozwiązania z karą oczekującą na zastosowanie. Dane logowania można
+nadpisać zmiennymi `ITL_BOOTSTRAP_MANAGER_USERNAME`,
+`ITL_BOOTSTRAP_MANAGER_EMAIL` i `ITL_BOOTSTRAP_MANAGER_PASSWORD`.
 
 Domyślna konfiguracja bazy:
 
