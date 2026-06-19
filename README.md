@@ -94,7 +94,16 @@ Testy backendu:
 ./gradlew :backend:test
 ```
 
-Te testy uruchamiają się z profilem `test`, który używa PostgreSQL przez Testcontainers. Docker musi być dostępny.
+Testy backendu używają PostgreSQL przez Testcontainers i uruchamiają changelog Liquibase.
+Docker musi być dostępny.
+
+Test integracyjny PostgreSQL:
+
+```bash
+./gradlew :backend:postgresIntegrationTest
+```
+
+Ten test uruchamia PostgreSQL przez Testcontainers, aplikuje migracje i wymaga dostępnego Dockera.
 
 ## Frontend 
 ### http://localhost:5173

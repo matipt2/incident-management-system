@@ -25,6 +25,9 @@ jobs:
       - name: Run backend tests
         run: ./gradlew :backend:test
 
+      - name: Verify PostgreSQL Liquibase migrations
+        run: ./gradlew :backend:postgresIntegrationTest
+
   test-frontend:
     runs-on: ubuntu-latest
 

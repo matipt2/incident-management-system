@@ -6,14 +6,12 @@ import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
 import org.springframework.transaction.annotation.Transactional
 import org.testcontainers.containers.PostgreSQLContainer
-import org.testcontainers.spock.Testcontainers
 import pl.edu.uj.projzes.itl.application.IncidentService
 import pl.edu.uj.projzes.itl.infrastructure.persistence.IncidentRepository
 import spock.lang.Shared
 import spock.lang.Specification
 
 @SpringBootTest
-@Testcontainers
 @Transactional
 class PostgresLiquibaseIntegrationSpec extends Specification {
 
@@ -22,6 +20,10 @@ class PostgresLiquibaseIntegrationSpec extends Specification {
             .withDatabaseName("incident_db")
             .withUsername("incident_user")
             .withPassword("incident_password")
+
+    static {
+        postgres.start()
+    }
 
     @DynamicPropertySource
     static void postgresProperties(DynamicPropertyRegistry registry) {
@@ -53,5 +55,9 @@ class PostgresLiquibaseIntegrationSpec extends Specification {
         then:
         incident.id != null
         incidentRepository.findById(incident.id).isPresent()
+    }
+
+    def cleanupSpec() {
+        postgres.stop()
     }
 }
