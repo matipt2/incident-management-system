@@ -22,7 +22,7 @@ class AuthControllerSpec extends Specification {
     @Autowired
     ObjectMapper objectMapper
 
-    def "rejestracja tworzy użytkownika i zwraca token JWT"() {
+    def "rejestracja tworzy konto REPORTER bez tokenu JWT"() {
         given:
         def body = [username: "newuser", email: "new@example.com", password: "password123"]
 
@@ -36,13 +36,13 @@ class AuthControllerSpec extends Specification {
         then:
         result.response.status == 201
         def json = objectMapper.readValue(result.response.contentAsString, Map)
-        json.token != null
+        json.token == null
         json.username == "newuser"
         json.role == "REPORTER"
         json.permissions != null
     }
 
-    def "rejestracja z rolą AGENT zwraca uprawnienia agenta"() {
+    def "publiczna rejestracja ignoruje próbę nadania roli AGENT"() {
         given:
         def body = [username: "agentuser", email: "agent@example.com", password: "password123", role: "AGENT"]
 
@@ -56,8 +56,8 @@ class AuthControllerSpec extends Specification {
         then:
         result.response.status == 201
         def json = objectMapper.readValue(result.response.contentAsString, Map)
-        json.role == "AGENT"
-        json.permissions.contains("INCIDENT_ASSIGN")
+        json.role == "REPORTER"
+        !json.permissions.contains("INCIDENT_ASSIGN")
     }
 
     def "rejestracja z istniejącą nazwą użytkownika zwraca 409"() {

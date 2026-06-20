@@ -225,3 +225,108 @@ databaseChangeLog:
               - column:
                   name: status
                   type: varchar(255)
+
+  - changeSet:
+      id: 007-create-projects-and-references
+      author: team
+      changes:
+        - createTable:
+            tableName: projects
+            columns:
+              - column:
+                  name: project_key
+                  type: varchar(50)
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: name
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: description
+                  type: text
+              - column:
+                  name: active
+                  type: boolean
+                  defaultValueBoolean: true
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: timestamp with time zone
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: timestamp with time zone
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+        - insert:
+            tableName: projects
+            columns:
+              - column: { name: project_key, value: PROJ-1 }
+              - column: { name: name, value: Project 1 }
+              - column: { name: description, value: Default incident management project }
+              - column: { name: active, valueBoolean: true }
+        - insert:
+            tableName: projects
+            columns:
+              - column: { name: project_key, value: PROJ-SLA }
+              - column: { name: name, value: SLA Project }
+              - column: { name: description, value: Default project for SLA scenarios }
+              - column: { name: active, valueBoolean: true }
+        - sql:
+            dbms: postgresql
+            sql: >
+              INSERT INTO projects (project_key, name, description, active, created_at, updated_at)
+              SELECT project_id, project_id, 'Backfilled project', true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              FROM (
+                SELECT project_id FROM incidents WHERE project_id IS NOT NULL
+                UNION
+                SELECT project_id FROM sla_policies WHERE project_id IS NOT NULL
+                UNION
+                SELECT project_id FROM sla_violations WHERE project_id IS NOT NULL
+              ) referenced_projects
+              ON CONFLICT (project_key) DO NOTHING;
+        - addForeignKeyConstraint:
+            baseTableName: incidents
+            baseColumnNames: project_id
+            constraintName: fk_incidents_project
+            referencedTableName: projects
+            referencedColumnNames: project_key
+        - addForeignKeyConstraint:
+            baseTableName: sla_policies
+            baseColumnNames: project_id
+            constraintName: fk_sla_policies_project
+            referencedTableName: projects
+            referencedColumnNames: project_key
+        - addForeignKeyConstraint:
+            baseTableName: sla_violations
+            baseColumnNames: project_id
+            constraintName: fk_sla_violations_project
+            referencedTableName: projects
+            referencedColumnNames: project_key
+
+  - changeSet:
+      id: 008-seed-test-projects
+      author: team
+      context: test
+      changes:
+        - sql:
+            dbms: postgresql
+            sql: >
+              INSERT INTO projects (project_key, name, description, active, created_at, updated_at)
+              SELECT project_key, project_key, 'Automated test project', true,
+                     CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              FROM (VALUES
+                ('PROJ-2'), ('PROJ-HIST'), ('PROJ-HIST-DATE'), ('PROJ-CTRL-SLA'),
+                ('PROJ-POLICY-CTRL'), ('PROJ-VIOLATION-CTRL'), ('PROJ-PM'),
+                ('PROJ-PM-ERR'), ('PROJ-PM-VALID'), ('PROJ-CRIT'), ('PROJ-RESP'),
+                ('PROJ-CLOSED'), ('PROJ-NO-POLICY'), ('PROJ-PENALTY'),
+                ('P-1'), ('P-2'), ('PROJ-PG')
+              ) AS test_projects(project_key)
+              ON CONFLICT (project_key) DO NOTHING;

@@ -49,7 +49,7 @@ describe('incident workflows', () => {
     cy.wait('@fetchMe')
     cy.get('#title').type('Cannot access admin panel')
     cy.get('#description').type('Users receive a 503 response.')
-    cy.get('#projectId').type('OPS')
+    cy.get('#projectId').select('OPS')
     cy.contains('button', 'Create incident').click()
 
     cy.wait('@createIncident')

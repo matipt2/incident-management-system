@@ -3,6 +3,7 @@ package pl.edu.uj.projzes.itl.infrastructure.config;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import pl.edu.uj.projzes.itl.application.SlaService;
 import pl.edu.uj.projzes.itl.domain.incident.IncidentPriority;
 import pl.edu.uj.projzes.itl.infrastructure.persistence.SlaRepository;
@@ -14,6 +15,7 @@ import java.time.Duration;
 public class SlaPolicySeeder {
 
     @Bean
+    @Order(100)
     ApplicationRunner seedDefaultSlaPolicies(SlaRepository slaRepository, SlaService slaService) {
         return args -> {
             if (slaRepository.count() > 0) {

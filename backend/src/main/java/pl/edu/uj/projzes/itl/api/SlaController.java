@@ -8,18 +8,28 @@ import pl.edu.uj.projzes.itl.api.dto.SlaPolicyRequest;
 import pl.edu.uj.projzes.itl.api.dto.SlaPolicyResponse;
 import pl.edu.uj.projzes.itl.api.dto.SlaViolationResponse;
 import pl.edu.uj.projzes.itl.application.SlaService;
+import pl.edu.uj.projzes.itl.application.IncidentVisibilityService;
+import pl.edu.uj.projzes.itl.domain.incident.Incident;
+import pl.edu.uj.projzes.itl.infrastructure.web.CurrentUserProvider;
 
 import java.time.Duration;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/sla")
 public class SlaController {
 
     private final SlaService slaService;
+    private final IncidentVisibilityService incidentVisibilityService;
+    private final CurrentUserProvider currentUserProvider;
 
-    public SlaController(SlaService slaService) {
+    public SlaController(SlaService slaService,
+                         IncidentVisibilityService incidentVisibilityService,
+                         CurrentUserProvider currentUserProvider) {
         this.slaService = slaService;
+        this.incidentVisibilityService = incidentVisibilityService;
+        this.currentUserProvider = currentUserProvider;
     }
 
     @PostMapping("/check")
@@ -74,7 +84,14 @@ public class SlaController {
     @PreAuthorize("hasAuthority('SLA_READ')")
     public List<SlaViolationResponse> listViolations(
             @RequestParam(required = false) String projectId) {
+        var user = currentUserProvider.get();
+        var visibleIds = incidentVisibilityService.getVisibleIncidents(
+                user, null, null, null, projectId, null)
+                .stream()
+                .map(Incident::getId)
+                .collect(Collectors.toSet());
         return slaService.getViolations(projectId).stream()
+                .filter(violation -> visibleIds.contains(violation.getIncidentId()))
                 .map(SlaViolationResponse::from)
                 .toList();
     }
@@ -83,6 +100,7 @@ public class SlaController {
     @PreAuthorize("hasAuthority('SLA_READ')")
     public List<SlaViolationResponse> violationsForIncident(
             @PathVariable String incidentId) {
+        incidentVisibilityService.getVisibleIncident(incidentId, currentUserProvider.get());
         return slaService.getViolationsForIncident(incidentId).stream()
                 .map(SlaViolationResponse::from)
                 .toList();

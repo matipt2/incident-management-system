@@ -147,6 +147,7 @@ class IncidentServiceSpec extends Specification {
         given:
         def incident = incidentService.reportIncident("Krytyczna awaria", "Opis", "user", "API", "PROJ-1")
         incidentService.applyClassification(incident.id, IncidentPriority.CRITICAL, IncidentCategory.APPLICATION, "agent1")
+        incidentService.assignToAgent(incident.id, "agent1")
         incidentService.resolve(incident.id, "Naprawione", "agent1")
 
         when:
@@ -160,6 +161,7 @@ class IncidentServiceSpec extends Specification {
         given:
         def incident = incidentService.reportIncident("Krytyczna awaria", "Opis", "user", "API", "PROJ-1")
         incidentService.applyClassification(incident.id, IncidentPriority.CRITICAL, IncidentCategory.APPLICATION, "agent1")
+        incidentService.assignToAgent(incident.id, "agent1")
         incidentService.resolve(incident.id, "Naprawione", "agent1")
         postMortemService.create(incident.id, "author")
         postMortemService.update(incident.id, "Root cause", "Timeline", "Impact", "Action items", "author")

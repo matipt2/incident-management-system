@@ -14,6 +14,9 @@ const pageTitle = computed(() => {
   if (route.name === 'incidents-list') return 'Incidents'
   if (route.name === 'incident-details') return 'Incident details'
   if (route.name === 'incident-submitted') return 'Incident submitted'
+  if (route.name === 'projects') return 'Projects'
+  if (route.name === 'users') return 'User roles'
+  if (route.name === 'sla') return 'Service levels'
   return 'Report Incident'
 })
 
@@ -44,7 +47,7 @@ async function handleLogout() {
     </header>
 
     <div class="workspace" :class="{ 'workspace--with-sidebar': showSidebar }">
-      <AppSidebar v-if="showSidebar" :role="auth.user.value?.role" />
+      <AppSidebar v-if="showSidebar" :permissions="auth.user.value?.permissions || []" />
 
       <main class="app-content">
         <RouterView />

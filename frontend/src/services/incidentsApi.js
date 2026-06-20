@@ -48,3 +48,24 @@ export async function assignIncidentToAgent(id, agentId) {
         body: JSON.stringify({ agentId })
     })
 }
+
+export async function escalateIncident(id, reason) {
+    const params = new URLSearchParams({ reason })
+    return apiFetch(`/api/incidents/${id}/escalate?${params}`, { method: 'POST' })
+}
+
+export async function resolveIncident(id, resolution) {
+    const params = new URLSearchParams({ resolution })
+    return apiFetch(`/api/incidents/${id}/resolve?${params}`, { method: 'POST' })
+}
+
+export async function closeIncident(id) {
+    return apiFetch(`/api/incidents/${id}/close`, { method: 'POST' })
+}
+
+export async function classifyIncident(id, classification) {
+    return apiFetch(`/api/incidents/${id}/classify`, {
+        method: 'POST',
+        body: JSON.stringify(classification)
+    })
+}

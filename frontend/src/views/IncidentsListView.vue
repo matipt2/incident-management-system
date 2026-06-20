@@ -3,6 +3,7 @@ import { onMounted, reactive, ref } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 import { ApiError } from '../services/apiClient'
 import { fetchVisibleIncidents } from '../services/incidentsApi'
+import { fetchProjects } from '../services/projectsApi'
 
 const router = useRouter()
 
@@ -17,6 +18,7 @@ const filters = reactive({
 const incidents = ref([])
 const isLoading = ref(true)
 const errorMessage = ref('')
+const projects = ref([])
 
 async function loadIncidents() {
   isLoading.value = true
@@ -44,7 +46,14 @@ function resetFilters() {
   loadIncidents()
 }
 
-onMounted(loadIncidents)
+onMounted(async () => {
+  try {
+    projects.value = await fetchProjects()
+  } catch {
+    projects.value = []
+  }
+  await loadIncidents()
+})
 </script>
 
 <template>
@@ -83,7 +92,12 @@ onMounted(loadIncidents)
           <option value="OTHER">OTHER</option>
         </select>
 
-        <input v-model="filters.projectId" type="text" placeholder="Project ID" class="filters__input" />
+        <select v-model="filters.projectId" class="form-select">
+          <option value="">All projects</option>
+          <option v-for="project in projects" :key="project.key" :value="project.key">
+            {{ project.name }}
+          </option>
+        </select>
         <input v-model="filters.search" type="text" placeholder="Search by ID, title, description..." class="filters__input" />
 
         <div class="filters__actions">
@@ -115,8 +129,17 @@ onMounted(loadIncidents)
                 <RouterLink :to="`/incidents/${incident.id}`" class="table-link">{{ incident.id }}</RouterLink>
               </td>
               <td>{{ incident.title }}</td>
-              <td>{{ incident.status }}</td>
-              <td>{{ incident.priority || 'N/A' }}</td>
+              <td><span class="status-badge" :class="`status-badge--${incident.status.toLowerCase()}`">{{ incident.status }}</span></td>
+              <td>
+                <span
+                  v-if="incident.priority"
+                  class="priority-badge"
+                  :class="`priority-badge--${incident.priority.toLowerCase()}`"
+                >
+                  {{ incident.priority }}
+                </span>
+                <span v-else>N/A</span>
+              </td>
               <td>{{ incident.category || 'N/A' }}</td>
               <td>{{ incident.assignedTo || 'Unassigned' }}</td>
               <td>{{ incident.updatedAt ? new Date(incident.updatedAt).toLocaleString() : 'N/A' }}</td>

@@ -63,7 +63,8 @@ a {
 
 button,
 input,
-textarea {
+textarea,
+select {
     font: inherit;
 }
 
@@ -214,11 +215,180 @@ textarea {
 }
 
 .assignment-card,
-.timeline-card {
+.timeline-card,
+.workflow-card {
     border: 1px solid var(--border-soft);
     border-radius: 16px;
     padding: 14px;
     margin-top: 14px;
+}
+
+.workflow-card {
+    background: linear-gradient(145deg, rgba(37, 99, 235, 0.045), rgba(255, 255, 255, 0.012));
+}
+
+.workflow-card__header,
+.panel__header--actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+}
+
+.workflow-card__eyebrow {
+    margin: 0 0 4px;
+    color: #93c5fd;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+.workflow-card__hint,
+.workflow-note {
+    color: var(--muted);
+    font-size: 0.82rem;
+}
+
+.workflow-note {
+    margin: 10px 0 0;
+}
+
+.workflow-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.workflow-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 12px;
+}
+
+.status-badge,
+.priority-badge {
+    display: inline-flex;
+    align-items: center;
+    width: fit-content;
+    border: 1px solid var(--border-soft);
+    border-radius: 999px;
+    padding: 4px 9px;
+    color: #dbeafe;
+    background: rgba(59, 130, 246, 0.12);
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+}
+
+.status-badge--closed,
+.status-badge--approved {
+    color: #86efac;
+    background: rgba(22, 101, 52, 0.22);
+    border-color: rgba(74, 222, 128, 0.3);
+}
+
+.status-badge--escalated,
+.status-badge--missing,
+.priority-badge--critical {
+    color: #fca5a5;
+    background: rgba(127, 29, 29, 0.25);
+    border-color: rgba(248, 113, 113, 0.32);
+}
+
+.status-badge--resolved,
+.priority-badge--low {
+    color: #86efac;
+    background: rgba(22, 101, 52, 0.2);
+}
+
+.priority-badge--high {
+    color: #fdba74;
+    background: rgba(154, 52, 18, 0.22);
+    border-color: rgba(251, 146, 60, 0.3);
+}
+
+.priority-badge--medium {
+    color: #fde68a;
+    background: rgba(133, 77, 14, 0.22);
+    border-color: rgba(250, 204, 21, 0.26);
+}
+
+.postmortem-form {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.postmortem-form textarea {
+    min-height: 105px;
+    resize: vertical;
+}
+
+.postmortem-summary {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    margin: 0;
+}
+
+.postmortem-summary div {
+    padding: 12px;
+    border: 1px solid var(--border-soft);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.postmortem-summary dt {
+    color: var(--muted);
+    font-size: 0.78rem;
+}
+
+.postmortem-summary dd {
+    margin: 5px 0 0;
+    white-space: pre-wrap;
+}
+
+.violation-list {
+    display: grid;
+    gap: 8px;
+}
+
+.violation-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    border: 1px solid var(--border-soft);
+    border-radius: 12px;
+}
+
+.violation-item p {
+    margin: 3px 0 0;
+    color: var(--muted);
+    font-size: 0.8rem;
+}
+
+.sla-page {
+    display: grid;
+    gap: 18px;
+}
+
+.sla-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr);
+    gap: 20px;
+}
+
+.sla-layout--readonly {
+    grid-template-columns: 1fr;
+}
+
+.filter-row {
+    width: min(340px, 100%);
+    margin-bottom: 14px;
 }
 
 .assignment-row {
@@ -735,5 +905,49 @@ textarea {
         flex-direction: row;
         justify-content: center;
         flex-wrap: wrap;
+    }
+}
+
+.action-note,
+.admin-form input,
+.admin-form textarea {
+    width: 100%;
+    color: var(--text);
+    background: rgba(2, 6, 12, 0.22);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 10px 12px;
+}
+
+.action-note { margin-bottom: 10px; resize: vertical; }
+.admin-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
+.admin-form { display: grid; align-content: start; gap: 12px; }
+.table-actions { display: flex; gap: 8px; }
+.table-actions .btn { min-width: auto; min-height: 36px; }
+.compact-select { min-width: 160px; padding-top: 8px; padding-bottom: 8px; }
+
+@media (max-width: 820px) {
+    .workspace--with-sidebar,
+    .admin-grid,
+    .sla-layout,
+    .workflow-grid,
+    .postmortem-form,
+    .postmortem-summary {
+        grid-template-columns: 1fr;
+    }
+
+    .sidebar {
+        position: static;
+    }
+
+    .filters,
+    .details-grid,
+    .summary-grid,
+    .incident-form {
+        grid-template-columns: 1fr;
+    }
+
+    .form-field--full {
+        grid-column: auto;
     }
 }

@@ -4,16 +4,17 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import pl.edu.uj.projzes.itl.api.dto.ClassifyRequest;
 import pl.edu.uj.projzes.itl.api.dto.CreateIncidentRequest;
 import pl.edu.uj.projzes.itl.api.dto.IncidentEventResponse;
 import pl.edu.uj.projzes.itl.api.dto.IncidentResponse;
 import pl.edu.uj.projzes.itl.application.IncidentService;
+import pl.edu.uj.projzes.itl.application.IncidentAccessService;
+import pl.edu.uj.projzes.itl.application.IncidentVisibilityService;
 import pl.edu.uj.projzes.itl.domain.incident.IncidentStatus;
 import pl.edu.uj.projzes.itl.domain.user.CurrentUser;
-import pl.edu.uj.projzes.itl.infrastructure.web.UserContextHolder;
+import pl.edu.uj.projzes.itl.infrastructure.web.CurrentUserProvider;
 
 import java.time.Instant;
 import java.util.List;
@@ -23,9 +24,18 @@ import java.util.List;
 public class IncidentController {
 
     private final IncidentService incidentService;
+    private final IncidentVisibilityService incidentVisibilityService;
+    private final IncidentAccessService incidentAccessService;
+    private final CurrentUserProvider currentUserProvider;
 
-    public IncidentController(IncidentService incidentService) {
+    public IncidentController(IncidentService incidentService,
+                              IncidentVisibilityService incidentVisibilityService,
+                              IncidentAccessService incidentAccessService,
+                              CurrentUserProvider currentUserProvider) {
         this.incidentService = incidentService;
+        this.incidentVisibilityService = incidentVisibilityService;
+        this.incidentAccessService = incidentAccessService;
+        this.currentUserProvider = currentUserProvider;
     }
 
     @PostMapping
@@ -36,7 +46,7 @@ public class IncidentController {
                 incidentService.reportIncident(
                         request.title(),
                         request.description(),
-                        currentUsername(),
+                        currentUser().username(),
                         request.channel(),
                         request.projectId()
                 )
@@ -46,16 +56,17 @@ public class IncidentController {
     @GetMapping
     @PreAuthorize("hasAuthority('INCIDENT_READ')")
     public List<IncidentResponse> list(@RequestParam(required = false) IncidentStatus status) {
-        var incidents = status != null
-                ? incidentService.getByStatus(status)
-                : incidentService.getAll();
-        return incidents.stream().map(IncidentResponse::from).toList();
+        return incidentVisibilityService.getVisibleIncidents(
+                        currentUser(), status, null, null, null, null)
+                .stream()
+                .map(IncidentResponse::from)
+                .toList();
     }
 
     @GetMapping("/{id}")
     @PreAuthorize("hasAuthority('INCIDENT_READ')")
     public IncidentResponse get(@PathVariable String id) {
-        return IncidentResponse.from(incidentService.getById(id));
+        return IncidentResponse.from(incidentVisibilityService.getVisibleIncident(id, currentUser()));
     }
 
     @GetMapping("/{id}/events")
@@ -65,50 +76,55 @@ public class IncidentController {
             @RequestParam(required = false) String eventType,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant from,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant to) {
-        return incidentService.getEvents(id, eventType, from, to).stream()
+        return incidentVisibilityService.getVisibleIncidentHistory(id, currentUser()).stream()
+                .filter(event -> eventType == null || eventType.isBlank()
+                        || eventType.equals(event.getEventType()))
+                .filter(event -> from == null || !event.getOccurredAt().isBefore(from))
+                .filter(event -> to == null || !event.getOccurredAt().isAfter(to))
                 .map(IncidentEventResponse::from)
                 .toList();
-    }
-
-    @PostMapping("/{id}/assign")
-    @PreAuthorize("hasAuthority('INCIDENT_ASSIGN')")
-    public IncidentResponse assign(@PathVariable String id, @RequestParam String agentId) {
-        return IncidentResponse.from(incidentService.assignToAgent(id, agentId));
     }
 
     @PostMapping("/{id}/classify")
     @PreAuthorize("hasAuthority('INCIDENT_CLASSIFY')")
     public IncidentResponse classify(@PathVariable String id,
                                      @Valid @RequestBody ClassifyRequest request) {
+        CurrentUser user = currentUser();
+        var incident = incidentVisibilityService.getVisibleIncident(id, user);
+        incidentAccessService.requireAgentOrManager(incident, user);
         return IncidentResponse.from(
-                incidentService.applyClassification(id, request.priority(), request.category(), currentUsername())
+                incidentService.applyClassification(id, request.priority(), request.category(), user.username())
         );
     }
 
     @PostMapping("/{id}/escalate")
     @PreAuthorize("hasAuthority('INCIDENT_ESCALATE')")
     public IncidentResponse escalate(@PathVariable String id, @RequestParam String reason) {
-        return IncidentResponse.from(incidentService.escalate(id, reason, currentUsername()));
+        CurrentUser user = currentUser();
+        var incident = incidentVisibilityService.getVisibleIncident(id, user);
+        incidentAccessService.requireAgentOrManager(incident, user);
+        return IncidentResponse.from(incidentService.escalate(id, reason, user.username()));
     }
 
     @PostMapping("/{id}/resolve")
     @PreAuthorize("hasAuthority('INCIDENT_RESOLVE')")
     public IncidentResponse resolve(@PathVariable String id, @RequestParam String resolution) {
-        return IncidentResponse.from(incidentService.resolve(id, resolution, currentUsername()));
+        CurrentUser user = currentUser();
+        var incident = incidentVisibilityService.getVisibleIncident(id, user);
+        incidentAccessService.requireAgentOrManager(incident, user);
+        return IncidentResponse.from(incidentService.resolve(id, resolution, user.username()));
     }
 
     @PostMapping("/{id}/close")
     @PreAuthorize("hasAuthority('INCIDENT_CLOSE')")
     public IncidentResponse close(@PathVariable String id) {
-        return IncidentResponse.from(incidentService.close(id, currentUsername()));
+        CurrentUser user = currentUser();
+        var incident = incidentVisibilityService.getVisibleIncident(id, user);
+        incidentAccessService.requireManager(user);
+        return IncidentResponse.from(incidentService.close(incident.getId(), user.username()));
     }
 
-    private String currentUsername() {
-        CurrentUser user = UserContextHolder.get();
-        if (user != null) {
-            return user.username();
-        }
-        // Fallback for tests using @WithMockUser (no JWT filter)
-        return SecurityContextHolder.getContext().getAuthentication().getName();
+    private CurrentUser currentUser() {
+        return currentUserProvider.get();
     }
 }

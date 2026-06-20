@@ -23,15 +23,18 @@ public class SlaService {
     private final IncidentRepository incidentRepository;
     private final SlaRepository slaRepository;
     private final SlaViolationRepository violationRepository;
+    private final ProjectService projectService;
     private final Clock clock;
 
     public SlaService(IncidentRepository incidentRepository,
                       SlaRepository slaRepository,
                       SlaViolationRepository violationRepository,
+                      ProjectService projectService,
                       Clock clock) {
         this.incidentRepository = incidentRepository;
         this.slaRepository = slaRepository;
         this.violationRepository = violationRepository;
+        this.projectService = projectService;
         this.clock = clock;
     }
 
@@ -68,9 +71,10 @@ public class SlaService {
     public SlaPolicy createPolicy(String projectId, IncidentPriority priority,
                                   Duration responseTime, Duration resolutionTime,
                                   BigDecimal penaltyAmount) {
-        SlaPolicy policy = slaRepository.findFirstByProjectIdAndPriorityOrderByIdAsc(projectId, priority)
+        String projectKey = projectService.requireActive(projectId).getKey();
+        SlaPolicy policy = slaRepository.findFirstByProjectIdAndPriorityOrderByIdAsc(projectKey, priority)
                 .orElseGet(SlaPolicy::new);
-        policy.setProjectId(projectId);
+        policy.setProjectId(projectKey);
         policy.setPriority(priority);
         policy.setResponseTime(responseTime);
         policy.setResolutionTime(resolutionTime);
@@ -84,7 +88,7 @@ public class SlaService {
                                   BigDecimal penaltyAmount) {
         SlaPolicy policy = slaRepository.findById(id)
                 .orElseThrow(() -> new SlaPolicyNotFoundException(id));
-        policy.setProjectId(projectId);
+        policy.setProjectId(projectService.requireActive(projectId).getKey());
         policy.setPriority(priority);
         policy.setResponseTime(responseTime);
         policy.setResolutionTime(resolutionTime);

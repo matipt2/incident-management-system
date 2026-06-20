@@ -3,6 +3,10 @@ import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import IncidentTimeline from '../components/IncidentTimeline.vue'
 import ManagerAssignmentPanel from '../components/ManagerAssignmentPanel.vue'
+import IncidentActionsPanel from '../components/IncidentActionsPanel.vue'
+import IncidentClassificationPanel from '../components/IncidentClassificationPanel.vue'
+import IncidentSlaPanel from '../components/IncidentSlaPanel.vue'
+import PostMortemPanel from '../components/PostMortemPanel.vue'
 import { ApiError } from '../services/apiClient'
 import { fetchIncidentHistory, fetchVisibleIncidentById } from '../services/incidentsApi'
 import { useAuthStore } from '../stores/auth'
@@ -15,6 +19,7 @@ const incident = ref(null)
 const history = ref([])
 const isLoading = ref(true)
 const errorMessage = ref('')
+const postMortemStatus = ref('')
 
 const incidentId = computed(() => route.params.id)
 const isManager = computed(() => auth.user.value?.role === 'MANAGER')
@@ -47,6 +52,15 @@ function handleAssigned(updatedIncident) {
   loadDetails()
 }
 
+async function handleUpdated(updatedIncident) {
+  incident.value = updatedIncident
+  await loadDetails()
+}
+
+function handlePostMortemChanged(report) {
+  postMortemStatus.value = report?.status || ''
+}
+
 onMounted(loadDetails)
 </script>
 
@@ -67,11 +81,18 @@ onMounted(loadDetails)
         <div class="details-grid">
           <div class="summary-item">
             <span class="summary-item__label">Status</span>
-            <strong class="summary-item__value">{{ incident.status }}</strong>
+            <strong class="status-badge" :class="`status-badge--${incident.status.toLowerCase()}`">{{ incident.status }}</strong>
           </div>
           <div class="summary-item">
             <span class="summary-item__label">Priority</span>
-            <strong class="summary-item__value">{{ incident.priority || 'N/A' }}</strong>
+            <strong
+              v-if="incident.priority"
+              class="priority-badge"
+              :class="`priority-badge--${incident.priority.toLowerCase()}`"
+            >
+              {{ incident.priority }}
+            </strong>
+            <strong v-else class="summary-item__value">N/A</strong>
           </div>
           <div class="summary-item">
             <span class="summary-item__label">Category</span>
@@ -81,17 +102,59 @@ onMounted(loadDetails)
             <span class="summary-item__label">Assigned to</span>
             <strong class="summary-item__value">{{ incident.assignedTo || 'Unassigned' }}</strong>
           </div>
+          <div class="summary-item">
+            <span class="summary-item__label">Project</span>
+            <strong class="summary-item__value">{{ incident.projectId }}</strong>
+          </div>
+          <div class="summary-item">
+            <span class="summary-item__label">Reported by</span>
+            <strong class="summary-item__value">{{ incident.reportedBy }}</strong>
+          </div>
+          <div class="summary-item">
+            <span class="summary-item__label">Channel</span>
+            <strong class="summary-item__value">{{ incident.channel }}</strong>
+          </div>
+          <div class="summary-item">
+            <span class="summary-item__label">Last updated</span>
+            <strong class="summary-item__value">
+              {{ incident.updatedAt ? new Date(incident.updatedAt).toLocaleString() : 'N/A' }}
+            </strong>
+          </div>
           <div class="summary-item summary-item--full">
             <span class="summary-item__label">Description</span>
             <strong class="summary-item__value">{{ incident.description }}</strong>
           </div>
         </div>
 
+        <IncidentClassificationPanel
+          :incident="incident"
+          :user="auth.user.value"
+          @updated="handleUpdated"
+        />
+
         <ManagerAssignmentPanel
-          v-if="isManager"
+          v-if="isManager && ['NEW', 'IN_PROGRESS', 'ESCALATED'].includes(incident.status)"
           :incident-id="incident.id"
           :current-assigned-to="incident.assignedTo || ''"
           @assigned="handleAssigned"
+        />
+
+        <IncidentActionsPanel
+          :incident="incident"
+          :user="auth.user.value"
+          :post-mortem-approved="postMortemStatus === 'APPROVED'"
+          @updated="handleUpdated"
+        />
+
+        <IncidentSlaPanel
+          :incident-id="incident.id"
+          :permissions="auth.user.value?.permissions || []"
+        />
+
+        <PostMortemPanel
+          :incident="incident"
+          :user="auth.user.value"
+          @changed="handlePostMortemChanged"
         />
 
         <IncidentTimeline :events="history" />
